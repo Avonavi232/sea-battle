@@ -1,28 +1,58 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import PropTypes from 'prop-types';
+import {connect} from "react-redux";
 
-class App extends Component {
-  render() {
+import * as Styled from './styled';
+import Phase1 from './Phase1';
+import {symbols} from "./utils/lettersGrid";
+
+const mapToGrid = (items, Component) => {
+    return items.map((item, index) => {
+        return <Component
+            key={item.id || index}
+            x={item.x}
+            y={item.y}
+            w={1}
+            h={1}
+        >
+            {item.content}
+        </Component>
+    });
+};
+
+const mapShipsToGrid = ships => {
+    return ships.map(ship => mapToGrid(ship.parts, Styled.HoverCell))
+};
+
+const App = props => {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
-}
+        <Styled.App>
+            <Styled.GlobalStyle/>
 
-export default App;
+            <Styled.Grid>
+                {/*<Styled.MoveIndicator/>*/}
+                {/*<Styled.MoveTimer>0:30</Styled.MoveTimer>*/}
+
+                <Styled.MyBoard>
+                    {mapToGrid(symbols, Styled.LetterCell)}
+                    {mapShipsToGrid(props.playerShips)}
+                </Styled.MyBoard>
+
+                {/*<Styled.OpponentBoard/>*/}
+
+                <Phase1/>
+            </Styled.Grid>
+        </Styled.App>
+    );
+};
+
+App.propTypes = {
+    dispatch: PropTypes.func.isRequired,
+    playerShips: PropTypes.array.isRequired,
+};
+
+const mapStateToProps = state => ({
+    playerShips: state.playerShips,
+});
+
+export default connect(mapStateToProps)(App);
