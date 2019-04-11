@@ -2,5 +2,6 @@
 export const SET_NOT_DISTRIBUTED_SHIPS = 'SET_NOT_DISTRIBUTED_SHIPS';
 export const ADD_PLAYER_SHIP = 'SET_PLAYER_SHIPS';
 export const SET_CURRENT = 'SET_CURRENT';
+export const SET_PHASE = 'SET_PHASE';
 
 

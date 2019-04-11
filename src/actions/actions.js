@@ -15,3 +15,8 @@ export const setCurrent = ship => ({
     type: C.SET_CURRENT,
     payload: {ship}
 });
+
+export const setPhase = phase => ({
+    type: C.SET_PHASE,
+    payload: {phase}
+});

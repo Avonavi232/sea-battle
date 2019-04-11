@@ -4,7 +4,8 @@ import {createReducer} from "../utils/functions";
 const initialState = {
     notDistributedShips: {},
     playerShips: [],
-    current: null
+    current: null,
+    phase: 1
 };
 
 const setNotDistributedShips = (state, {ships}) => ({
@@ -22,10 +23,16 @@ const setCurrent = (state, {ship}) => ({
     current: ship
 });
 
+const setPhase = (state, {phase}) => ({
+    ...state,
+    phase
+});
+
 const handlers = {
     [C.SET_NOT_DISTRIBUTED_SHIPS]: setNotDistributedShips,
     [C.ADD_PLAYER_SHIP]: addPlayerShip,
     [C.SET_CURRENT]: setCurrent,
+    [C.SET_PHASE]: setPhase,
 };
 
 const reducer = createReducer(initialState, handlers);
