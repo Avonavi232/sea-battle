@@ -16,3 +16,19 @@ for (let i = 0; i < config.boardSize; i++) {
 }
 
 export const symbols = [].concat(letters, digits);
+
+
+export const hoversGrid = [];
+
+for (let i = 0; i < config.boardSize; i++) {
+    for (let j = 0; j < config.boardSize; j++) {
+        hoversGrid.push({
+            x: j + 2,
+            y: i + 2,
+            data: {
+                'data-x': j + 1,
+                'data-y': i + 1,
+            }
+        });
+    }
+}
