@@ -119,19 +119,24 @@ const cellHoverBase = css`
     }
 `;
 
-export const Cell = styled(({x, y, w, h, ...props}) => <div {...props}/>)`
+export const Cell = styled(({x, y, w, h, ...props}) => <div {...props}/>).attrs(({x, y, w, h}) => ({
+    style: {gridArea: `${y} / ${x} / ${y + h} / ${x + w}`}
+}))`
   width: 100%;
   height: 100%;
-  grid-area: ${({x,y,w,h}) => `${y} / ${x} / ${y + h} / ${x + w}`};
 `;
 
 export const HoverCell = styled(Cell)`
   ${cellHoverBase};
-  transition: all .7s;
-  ${cellBg('#777')};
+  transition: all .2s;
+  
   &:hover {
-    border-color: green;
+    background-color: red;
   }
+`;
+
+export const ShipCell = styled(Cell)`
+  background-color: #6a9cf8;
 `;
 
 export const LetterCell = styled(Cell)`
