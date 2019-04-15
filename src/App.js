@@ -4,24 +4,11 @@ import {connect} from "react-redux";
 
 import * as Styled from './styled';
 import Phase1 from './Phase1';
-import {symbols} from "./utils/lettersGrid";
+import {symbols, hoversGrid} from "./utils/lettersGrid";
+import {eventsBus, mapToGrid, mapShipsToGrid} from "./utils/functions";
 
-const mapToGrid = (items, Component) => {
-    return items.map((item, index) => {
-        return <Component
-            key={item.id || index}
-            x={item.x}
-            y={item.y}
-            w={1}
-            h={1}
-        >
-            {item.content}
-        </Component>
-    });
-};
-
-const mapShipsToGrid = ships => {
-    return ships.map(ship => mapToGrid(ship.parts, Styled.HoverCell))
+const testClick = (x, y) => {
+    eventsBus.emit('opponentShoot', [x, y])
 };
 
 const App = props => {
@@ -30,17 +17,52 @@ const App = props => {
             <Styled.GlobalStyle/>
 
             <Styled.Grid>
-                {/*<Styled.MoveIndicator/>*/}
-                {/*<Styled.MoveTimer>0:30</Styled.MoveTimer>*/}
 
                 <Styled.MyBoard>
-                    {mapToGrid(symbols, Styled.LetterCell)}
+                    {
+                        props.phase === 1 &&
+                        mapToGrid(
+                            hoversGrid,
+                            () => Styled.HoverCell,
+                            (x, y) => eventsBus.emit('click', [x, y]),
+                            (x, y) => ({x: x + 2, y: y + 2})
+                        )
+                    }
+                    {mapToGrid(symbols, () => Styled.LetterCell, null, (x, y) => ({x: x + 1, y: y + 1}))}
                     {mapShipsToGrid(props.playerShips)}
                 </Styled.MyBoard>
 
-                {/*<Styled.OpponentBoard/>*/}
+                {
+                    props.phase === 1 &&
+                    <Phase1/>
+                }
 
-                <Phase1/>
+                {
+                    props.phase === 2 &&
+                    <>
+                        <Styled.OpponentBoard>
+                            {
+                                mapToGrid(
+                                    symbols,
+                                    () => Styled.LetterCell,
+                                    null,
+                                    (x, y) => ({x: x + 1, y: y + 1})
+                                )
+                            }
+                            {
+
+                                mapToGrid(
+                                    hoversGrid,
+                                    () => Styled.HoverCell,
+                                    testClick,
+                                    (x, y) => ({x: x + 2, y: y + 2})
+                                )
+                            }
+                        </Styled.OpponentBoard>
+                        <Styled.MoveIndicator/>
+                        <Styled.MoveTimer>0:30</Styled.MoveTimer>
+                    </>
+                }
             </Styled.Grid>
         </Styled.App>
     );
@@ -49,10 +71,12 @@ const App = props => {
 App.propTypes = {
     dispatch: PropTypes.func.isRequired,
     playerShips: PropTypes.array.isRequired,
+    phase: PropTypes.number.isRequired,
 };
 
 const mapStateToProps = state => ({
     playerShips: state.playerShips,
+    phase: state.phase
 });
 
 export default connect(mapStateToProps)(App);

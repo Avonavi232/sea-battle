@@ -34,6 +34,7 @@ export class BasicShip{
     }
 
     get length(){
+        //this is the default. Specific values will be set in the inheritors
         return 1;
     }
 

@@ -80,7 +80,6 @@ class Phase1 extends Component {
 
     componentWillUnmount() {
         this.unsubscribe();
-        console.log(eventsBus);
     }
 
     setCurrent = type => {
