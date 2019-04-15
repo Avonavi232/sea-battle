@@ -139,6 +139,31 @@ export const ShipCell = styled(Cell)`
   background-color: #6a9cf8;
 `;
 
+export const ShipShotCell = styled(ShipCell)`
+  position: relative;
+  overflow: hidden;
+  &:after,
+  &:before {
+    content: '';
+    position: absolute;
+    top: -25%;
+    bottom: -25%;
+    left: 50%;
+    width: 2px;
+    background-color: red;
+  }
+  &:before {
+    transform: translateX(-50%) rotate(45deg);
+  }
+  &:after {
+    transform: translateX(-50%) rotate(-45deg);
+  }
+`;
+
+export const ShipDieCell = styled(ShipShotCell)`
+  opacity: 0.3;
+`;
+
 export const LetterCell = styled(Cell)`
   display: flex;
   align-items: center;
