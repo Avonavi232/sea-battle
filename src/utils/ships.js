@@ -2,7 +2,7 @@ import uuid from "uuid/v4";
 import {isNumeric} from "./functions";
 import {updatePlayerShip} from "../actions";
 
-class BasicShip{
+export class BasicShip{
     constructor(params, dispatch) {
         this.id = uuid();
         this.parts = {};
@@ -13,6 +13,12 @@ class BasicShip{
         }
     }
 
+    static types = {
+        default: 'default',
+        shot: 'shot',
+        die: 'die'
+    };
+
     set pos({x, y, direction}){
         if (isNumeric(x) && isNumeric(y) && direction !== undefined) {
             this.start = {x, y};
@@ -22,7 +28,7 @@ class BasicShip{
                     y = !direction ? this.start.y : this.start.y + i,
                     id = `${this.id}_${i+1}`;
 
-                this.parts[`${x};${y}`] = { x, y, id, type: 'default' };
+                this.parts[`${x};${y}`] = { x, y, id, type: BasicShip.types.default };
             }
         }
     }
@@ -37,7 +43,7 @@ class BasicShip{
 
     isDie(){
         for (let key in this.parts) {
-            if (this.parts[key].type !== 'shot') {
+            if (this.parts[key].type !== BasicShip.types.shot) {
                 return false;
             }
         }
@@ -45,12 +51,12 @@ class BasicShip{
     }
 
     catchShoot = (x, y) => {
-        if (this.hasPart(x, y)) {
-            this.parts[`${x};${y}`].type = 'shot';
+        if (this.hasPart(x, y) && this.parts[`${x};${y}`].type === BasicShip.types.default) {
+            this.parts[`${x};${y}`].type = BasicShip.types.shot;
 
             if (this.isDie()) {
                 for (let key in this.parts) {
-                    this.parts[key].type = 'die';
+                    this.parts[key].type = BasicShip.types.die;
                 }
             }
 
