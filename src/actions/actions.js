@@ -11,6 +11,11 @@ export const addPlayerShip = ship => ({
     payload: {ship}
 });
 
+export const updatePlayerShip = ship => ({
+    type: C.UPDATE_PLAYER_SHIP,
+    payload: {ship}
+});
+
 export const setCurrent = ship => ({
     type: C.SET_CURRENT,
     payload: {ship}
@@ -20,3 +25,5 @@ export const setPhase = phase => ({
     type: C.SET_PHASE,
     payload: {phase}
 });
+
+

@@ -15,7 +15,15 @@ const setNotDistributedShips = (state, {ships}) => ({
 
 const addPlayerShip = (state, {ship}) => ({
     ...state,
-    playerShips: state.playerShips.concat(ship)
+    playerShips: state.playerShips.concat(JSON.parse(JSON.stringify(ship)))
+});
+
+const updatePlayerShip = (state, {ship}) => ({
+    ...state,
+    playerShips: JSON.parse(JSON.stringify([].concat( //TODO think about the object immutability
+        state.playerShips.filter(({id}) => id !== ship.id),
+        ship
+    )))
 });
 
 const setCurrent = (state, {ship}) => ({
@@ -31,6 +39,7 @@ const setPhase = (state, {phase}) => ({
 const handlers = {
     [C.SET_NOT_DISTRIBUTED_SHIPS]: setNotDistributedShips,
     [C.ADD_PLAYER_SHIP]: addPlayerShip,
+    [C.UPDATE_PLAYER_SHIP]: updatePlayerShip,
     [C.SET_CURRENT]: setCurrent,
     [C.SET_PHASE]: setPhase,
 };
