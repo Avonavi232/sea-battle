@@ -5,9 +5,9 @@ import {connect} from "react-redux";
 
 import * as ships from "./utils/ships";
 import {cellBg} from "./styled";
-import {addPlayerShip, setCurrent, setNotDistributedShips} from "./actions";
+import {addPlayerShip, setCurrent, setNotDistributedShips, setPhase} from "./actions";
 import config from './config';
-import {between} from "./utils/functions";
+import {between, eventsBus} from "./utils/functions";
 
 const StyledPhase1 = styled.div`
   display: grid;
@@ -50,14 +50,37 @@ const Form = styled.form`
 `;
 
 class Phase1 extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            form: {
+                x: 0,
+                y: 0,
+                direction: '0'
+            }
+        }
+    }
+
 
     componentDidMount() {
-        this.props.dispatch(setNotDistributedShips({
-            single: [1, 1, 1, 1].map(() => new ships.SingleShip()),
-            double: [1, 1, 1].map(() => new ships.DoubleShip()),
-            triple: [1, 1].map(() => new ships.TripleShip()),
-            quadruple: [1].map(() => new ships.QuadrupleShip()),
-        }))
+        const {dispatch} = this.props;
+
+        dispatch(setNotDistributedShips({
+            single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
+            double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
+            triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
+            quadruple: [1].map(() => new ships.QuadrupleShip(null, dispatch)),
+        }));
+
+        this.unsubscribe = eventsBus.subscribe(
+            'click',
+            (x, y) => this.distributePlayerShip(x, y, Number(this.state.form.direction))
+        );
+    }
+
+    componentWillUnmount() {
+        this.unsubscribe();
+        console.log(eventsBus);
     }
 
     setCurrent = type => {
@@ -67,27 +90,59 @@ class Phase1 extends Component {
         }
     };
 
-    distributePlayerShip = event => {
+    getNextToDistribute = ships => {
+        const keys = Object.keys(ships);
+
+        for (let i = 0; i < keys.length; i++) {
+            if (ships[keys[i]][0]) {
+                return ships[keys[i]][0]
+            }
+        }
+
+        return null;
+    };
+
+    initialShipSubscribe = ship => {
+        eventsBus.subscribe('opponentShoot', ship.catchShoot);
+    };
+
+    onChangeHandler = ({target}) => {
+        this.setState({
+            form: {
+                ...this.state.form,
+                [target.name]: target.value
+            }
+        })
+    };
+
+    onSubmitHandler = (event) => {
         event.preventDefault();
         const
-            x =  Number(event.target.x.value),
-            y =  Number(event.target.y.value),
-            direction = Number(event.target.direction.value),
-            {dispatch} = this.props;
+            x =  Number(this.state.form.x),
+            y =  Number(this.state.form.y),
+            direction = Number(this.state.form.direction);
+
+        this.distributePlayerShip(x, y, direction)
+    };
+
+    distributePlayerShip = (x, y, direction) => {
+        const {dispatch} = this.props;
 
         if (
-            !between(x, 0, config.boardSize + 1)
-            || !between(y, 0, config.boardSize + 1)
+            !between(x, -1, config.boardSize)
+            || !between(y, -1, config.boardSize)
         ) {
             return;
         }
 
         const ship = this.props.current;
         ship.pos = {
-            x: x + 1,
-            y: y + 1,
+            x,
+            y,
             direction
         };
+
+        this.initialShipSubscribe(ship);
 
         const cache = {...this.props.notDistributedShips};
 
@@ -102,7 +157,15 @@ class Phase1 extends Component {
             }
         }
 
-        dispatch(setCurrent(null));
+        const nextToDistribute = this.getNextToDistribute(cache);
+
+        if (nextToDistribute) {
+            dispatch(setCurrent(nextToDistribute));
+        } else {
+            dispatch(setCurrent(null));
+            dispatch(setPhase(2));
+        }
+
         dispatch(setNotDistributedShips(cache));
         dispatch(addPlayerShip(ship));
     };
@@ -150,20 +213,23 @@ class Phase1 extends Component {
                 {
                     current ?
                         <>
-                            <Current size={current.length}/>
+                            <Current
+                                size={current.length}
+                            />
 
-                            <Form onSubmit={this.distributePlayerShip}>
+
+                            <Form onSubmit={this.onSubmitHandler}>
                                 <span>x</span>
-                                <input name="x" type="number" placeholder="x" defaultValue="1"/>
+                                <input onChange={this.onChangeHandler} name="x" type="number" placeholder="x" value={this.state.form.x}/>
 
                                 <span>y</span>
-                                <input name="y" type="number" placeholder="y" defaultValue="1"/>
+                                <input onChange={this.onChangeHandler} name="y" type="number" placeholder="y" value={this.state.form.y}/>
 
                                 <span>horizontal</span>
-                                <input name="direction" type="radio" value="0" defaultChecked/>
+                                <input onChange={this.onChangeHandler} name="direction" type="radio" value="0" checked={this.state.form.direction === '0'}/>
 
                                 <span>vertical</span>
-                                <input name="direction" type="radio" value="1"/>
+                                <input onChange={this.onChangeHandler} name="direction" type="radio" value="1" checked={this.state.form.direction === '1'}/>
 
                                 <button>Поставить</button>
                             </Form>
