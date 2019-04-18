@@ -7,6 +7,7 @@ export class BasicShip{
         this.id = uuid();
         this.parts = {};
         this.dispatch = dispatch || Function.prototype;
+        this.length = 1;
 
         if (params) {
             this.pos = params;
@@ -14,28 +15,23 @@ export class BasicShip{
     }
 
     static types = {
-        default: 'ship',
+        ship: 'ship',
         hit: 'hit',
         kill: 'kill'
     };
 
     set pos({x, y, direction}){
         if (isNumeric(x) && isNumeric(y) && direction !== undefined) {
-            this.start = {x, y};
+            const start = {x, y};
             for (let i = 0; i < this.length; i++) {
                 const
-                    x = direction ? this.start.x : this.start.x + i,
-                    y = !direction ? this.start.y : this.start.y + i,
+                    x = direction ? start.x : start.x + i,
+                    y = !direction ? start.y : start.y + i,
                     id = `${this.id}_${i+1}`;
 
-                this.parts[`${x};${y}`] = { x, y, id, type: BasicShip.types.default };
+                this.parts[`${x};${y}`] = { x, y, id, type: BasicShip.types.ship };
             }
         }
-    }
-
-    get length(){
-        //this is the default. Specific values will be set in the inheritors
-        return 1;
     }
 
     hasPart(x, y){
@@ -52,7 +48,8 @@ export class BasicShip{
     }
 
     catchShoot = (x, y) => {
-        if (this.hasPart(x, y) && this.parts[`${x};${y}`].type === BasicShip.types.default) {
+
+        if (this.hasPart(x, y) && this.parts[`${x};${y}`].type === BasicShip.types.ship) {
             this.parts[`${x};${y}`].type = BasicShip.types.hit;
 
             if (this.isDie()) {
@@ -61,32 +58,53 @@ export class BasicShip{
                 }
             }
 
+            console.log(this.dispatch);
             this.dispatch(updatePlayerShip(this)); //TODO: Move to callback
             return this.parts[`${x};${y}`].type;
         }
     };
+
+    static recreate = (shipData, dispatch) => {
+        const ship = new BasicShip(null, dispatch);
+        ship.id = shipData.id;
+
+        for(let key in shipData.parts){
+            ship.parts[key] = {};
+            ship.parts[key].x = shipData.parts[key].x;
+            ship.parts[key].y = shipData.parts[key].y;
+            ship.parts[key].type = BasicShip.types[shipData.parts[key].type];
+        }
+
+        ship.length = Object.keys(shipData.parts).length;
+
+        return ship;
+    }
 }
 
 export class SingleShip extends BasicShip{
-    get length(){
-        return 1;
+    constructor(...args) {
+        super(...args);
+        this.length = 1;
     }
 }
 
 export class DoubleShip extends BasicShip{
-    get length(){
-        return 2;
+    constructor(...args) {
+        super(...args);
+        this.length = 2;
     }
 }
 
 export class TripleShip extends BasicShip{
-    get length(){
-        return 3;
+    constructor(...args) {
+        super(...args);
+        this.length = 3;
     }
 }
 
 export class QuadrupleShip extends BasicShip{
-    get length(){
-        return 4;
+    constructor(...args) {
+        super(...args);
+        this.length = 4;
     }
 }

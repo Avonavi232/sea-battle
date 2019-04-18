@@ -89,7 +89,7 @@ export const mapShipsToGrid = ships => {
             case BasicShip.types.hit:
                 return Styled.ShotHitCell;
 
-            case BasicShip.types.default:
+            case BasicShip.types.ship:
             default:
                 return Styled.ShipCell
         }
@@ -97,4 +97,6 @@ export const mapShipsToGrid = ships => {
 
     return ships.map(ship => mapToGridShiftBy2(Object.values(ship.parts), getComponent))
 };
+
+export const wrt = str => console.log(str);
 

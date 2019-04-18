@@ -103,10 +103,6 @@ class ShipPlacementPanel extends Component {
         return null;
     };
 
-    initialShipSubscribe = ship => {
-        eventsBus.subscribe(busEvents.opponentShoot, ship.catchShoot);
-    };
-
     onChangeHandler = ({target}) => {
         this.setState({
             form: {
@@ -143,8 +139,6 @@ class ShipPlacementPanel extends Component {
             direction
         };
 
-        this.initialShipSubscribe(ship);
-
         const cache = {...this.props.notPlacedShips};
 
         for (let key in cache) {
@@ -165,7 +159,7 @@ class ShipPlacementPanel extends Component {
         } else {
             dispatch(setCurrent(null));
 
-            gameConnection.placementDoneHandler([].concat(playerShips, ship));
+            gameConnection.emitPlacementDone([].concat(playerShips, ship));
         }
 
         dispatch(setNotPlacedShips(cache));

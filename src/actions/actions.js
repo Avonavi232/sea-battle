@@ -1,4 +1,6 @@
 import * as C from './actionTypes';
+import {eventsBus} from "../utils/functions";
+import {busEvents} from "../utils/constants";
 
 
 export const setNotPlacedShips = ships => ({
@@ -6,10 +8,13 @@ export const setNotPlacedShips = ships => ({
     payload: {ships}
 });
 
-export const addPlayerShip = ship => ({
-    type: C.ADD_PLAYER_SHIP,
-    payload: {ship}
-});
+export const addPlayerShip = ship => {
+    eventsBus.subscribe(busEvents.opponentShoot, ship.catchShoot);
+    return {
+        type: C.ADD_PLAYER_SHIP,
+        payload: {ship}
+    }
+};
 
 export const updatePlayerShip = ship => ({
     type: C.UPDATE_PLAYER_SHIP,
