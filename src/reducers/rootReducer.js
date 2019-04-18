@@ -2,15 +2,28 @@ import * as C from '../actions/actionTypes';
 import {createReducer} from "../utils/functions";
 
 const initialState = {
-    notDistributedShips: {},
+    notPlacedShips: {},
     playerShips: [],
+    shotsMap: [],
+    opponentShotsMap: [],
     current: null,
-    phase: 1
+    iAmShooter: null,
+    settings: {
+        chatEnable: undefined,
+        maxScore: undefined,
+        roomID: undefined,
+        roomURL: undefined,
+        playerID: undefined,
+        side: undefined
+    },
+    status: {
+        gameStatus: -1
+    }
 };
 
 const setNotDistributedShips = (state, {ships}) => ({
     ...state,
-    notDistributedShips: ships
+    notPlacedShips: ships
 });
 
 const addPlayerShip = (state, {ship}) => ({
@@ -31,9 +44,35 @@ const setCurrent = (state, {ship}) => ({
     current: ship
 });
 
-const setPhase = (state, {phase}) => ({
+const setRoomSettings = (state, {settings}) => ({
     ...state,
-    phase
+    settings: {
+        ...state.settings,
+        ...settings
+    }
+});
+
+const setGameStatus = (state, {status}) => ({
+    ...state,
+    status: {
+        ...state.status,
+        gameStatus: status
+    }
+});
+
+const addShotToMap = (state, {shot}) => ({
+    ...state,
+    shotsMap: state.shotsMap.concat(shot)
+});
+
+const addOpponentShotToMap = (state, {shot}) => ({
+    ...state,
+    opponentShotsMap: state.opponentShotsMap.concat(shot)
+});
+
+const assignShooter = (state, {iAmShooter}) => ({
+    ...state,
+    iAmShooter
 });
 
 const handlers = {
@@ -41,7 +80,11 @@ const handlers = {
     [C.ADD_PLAYER_SHIP]: addPlayerShip,
     [C.UPDATE_PLAYER_SHIP]: updatePlayerShip,
     [C.SET_CURRENT]: setCurrent,
-    [C.SET_PHASE]: setPhase,
+    [C.SET_ROOM_SETTINGS]: setRoomSettings,
+    [C.SET_GAME_STATUS]: setGameStatus,
+    [C.ADD_SHOT_TO_MAP]: addShotToMap,
+    [C.ADD_OPPONENT_SHOT_TO_MAP]: addOpponentShotToMap,
+    [C.ASSIGN_SHOOTER]: assignShooter,
 };
 
 const reducer = createReducer(initialState, handlers);

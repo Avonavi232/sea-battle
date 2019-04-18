@@ -1,7 +1,7 @@
 import * as C from './actionTypes';
 
 
-export const setNotDistributedShips = ships => ({
+export const setNotPlacedShips = ships => ({
     type: C.SET_NOT_DISTRIBUTED_SHIPS,
     payload: {ships}
 });
@@ -21,9 +21,86 @@ export const setCurrent = ship => ({
     payload: {ship}
 });
 
-export const setPhase = phase => ({
-    type: C.SET_PHASE,
-    payload: {phase}
+export const addShotToMap = shot => ({
+    type: C.ADD_SHOT_TO_MAP,
+    payload: {shot}
+});
+
+export const addOpponentShotToMap = shot => ({
+    type: C.ADD_OPPONENT_SHOT_TO_MAP,
+    payload: {shot}
+});
+
+export const assignShooter = iAmShooter => ({
+    type: C.ASSIGN_SHOOTER,
+    payload: {iAmShooter}
+});
+
+
+
+
+
+export const setRoomSettings = settings => ({
+    type: C.SET_ROOM_SETTINGS,
+    payload: {settings}
+});
+
+
+export const setGameStatus = status => ({
+    type: C.SET_GAME_STATUS,
+    payload: {status}
+});
+
+export const playerMove = payload => ({
+    type: C.PLAYER_MOVE,
+    payload
+});
+
+export const opponentMove = payload => ({
+    type: C.OPPONENT_MOVE,
+    payload
+});
+
+export const clearMoves = () => ({
+    type: C.CLEAR_MOVES,
+});
+
+export const setWin = payload => ({
+    type: C.SET_WIN,
+    payload
+});
+
+export const increasePlayerWinsCounter = () => ({
+    type: C.INCREASE_PLAYER_WINS_COUNTER
+});
+
+export const increaseOpponentWinsCounter = () => ({
+    type: C.INCREASE_OPPONENT_WINS_COUNTER
+});
+
+export const pushMessagesArchive = payload => ({
+    type: C.PUSH_MESSAGES_ARCHIVE,
+    payload
+});
+
+export const clearMessagesArchive = payload => ({
+    type: C.CLEAR_MESSAGES_ARCHIVE,
+    payload
+});
+
+export const pushMatchesArchive = payload => ({
+    type: C.PUSH_MATCHES_ARCHIVE,
+    payload
+});
+
+export const clearMatchesArchive = payload => ({
+    type: C.CLEAR_MATCHES_ARCHIVE,
+    payload
+});
+
+export const restoreMatchesArchive = payload => ({
+    type: C.RESTORE_MATCHES_ARCHIVE,
+    payload
 });
 
 
