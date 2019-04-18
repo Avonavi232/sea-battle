@@ -8,7 +8,7 @@ class Ship {
 
     static get types() {
         return {
-            default: 'ship',
+            ship: 'ship',
             hit: 'hit',
             miss: 'miss',
             kill: 'kill'
@@ -29,7 +29,7 @@ class Ship {
     }
 
     catchShoot([x, y]) {
-        if (this.hasPart(x, y) && this.parts[`${x};${y}`].type === Ship.types.default) {
+        if (this.hasPart(x, y) && this.parts[`${x};${y}`].type === Ship.types.ship) {
             this.parts[`${x};${y}`].type = Ship.types.hit;
 
             if (this.isDie()) {

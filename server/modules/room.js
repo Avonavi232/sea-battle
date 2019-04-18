@@ -31,6 +31,12 @@ class Room {
         })
     }
 
+    joinSocketToRoom(socket) {
+        return new Promise(resolve => {
+            socket.join(this.roomID, () => resolve());
+        })
+    }
+
     isReadyToShipsPlacement() {
         return this.players.size === 2;
     }

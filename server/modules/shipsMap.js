@@ -19,6 +19,7 @@ class ShipsMap extends EventsBus {
 
     emitShotEvent(x, y) {
         let results = this.emit(shipsMapEvenets.opponentShoot, [x, y]).filter(el => !!el);
+
         return results.length ? results[0] : Ship.types.miss;
     }
 }

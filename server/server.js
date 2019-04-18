@@ -80,8 +80,6 @@ const shootHandlerCreator = player => (coords, ack) => {
             room = roomsContainer.getRoom(player.roomID),
             shotResult = room.playerShoots(player, coords);
 
-        console.log(shotResult);
-
         ack(shotResult); //Ответ стреляющему
 
         player.sendToRoomExceptMe('opponentShoot', coords); //Ответ тому, в кого стреляют
@@ -90,45 +88,49 @@ const shootHandlerCreator = player => (coords, ack) => {
     }
 };
 
-const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}) => {
+const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack = Function.prototype) => {
     const
         room = roomsContainer.getRoom(roomID),
         oldPlayer = room && reconnectingPlayerID && room.getPlayer(reconnectingPlayerID);
 
     if (!room) {
+        ack({
+            error: true,
+            message: 'room is not found in roomsContainer'
+        });
         return;
     }
 
     //On Reconnect
-    // if (oldPlayer && oldPlayer.status === 'offline'){
-    //     //Отпишем новосощданного пользователя от ивентов
-    //     player.socket.eventNames().forEach(event => {
-    //         player.socket.removeAllListeners(event);
-    //     });
-    //
-    //     //Установим старому пользователю, который в комнате, новый сокет
-    //     //Подпишем сокет на нужные ивенты
-    //     oldPlayer.setSocket(player.socket, roomID)
-    //         .then(() => subscribePlayerToSocketEvents(oldPlayer));
-    //
-    //     oldPlayer.sendToMe('roomReconnected', {
-    //         roomID: room.roomID,
-    //         playerID: oldPlayer.playerID,
-    //         settings: room.settings
-    //     });
-    //
-    //     if (room.isReadyToShipsPlacement()) {
-    //         room.startGame();
-    //     }
-    //
-    //     return;
-    // }
+    if (oldPlayer && oldPlayer.status === 'offline'){
+        //Отпишем новосозданного пользователя от ивентов
+        player.socket.eventNames().forEach(event => {
+            player.socket.removeAllListeners(event);
+        });
+
+        // //Установим старому пользователю, который в комнате, новый сокет
+        // //Подпишем сокет на нужные ивенты
+        oldPlayer.setSocket(player.socket, io);
+        room.joinSocketToRoom(player.socket)
+            .then(() => subscribePlayerToSocketEvents(oldPlayer));
+
+        ack({
+            reconnect: true,
+            settings: room.settings,
+            shipsMap: oldPlayer.shipsMap
+        });
+
+        if (room.arePlayersReady()){
+            room.startGame(oldPlayer);
+        }
+
+        return;
+    }
 
     room.addPlayer(player)
         .then(() => {
-            player.sendToRoom('roomEntered', {
+            ack({
                 roomID: room.roomID,
-                playerID: player.playerID,
                 settings: room.settings
             });
 
@@ -141,7 +143,6 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}) => 
 
 const disconnectHandlerCreator = player => () => {
     player.status = 'offline';
-
     player.socket.eventNames().forEach(event => {
         player.socket.removeAllListeners(event);
     });
