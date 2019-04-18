@@ -31,26 +31,32 @@ export const between = (number, from, to) => {
     return from < number && number < to;
 };
 
-function EventEmitter(){
+function EventEmitter() {
     this.callbacks = Object.create(null);
 
-    this.subscribe = function(eventName, callback) {
+    this.subscribe = function (eventName, callback) {
         this.callbacks[eventName] = this.callbacks[eventName] || [];
         this.callbacks[eventName].push(callback);
-        return () => {this.callbacks[eventName] = this.callbacks[eventName].filter(cb => cb !== callback)};
+        return () => {
+            this.callbacks[eventName] = this.callbacks[eventName].filter(cb => cb !== callback)
+        };
     };
 
-    this.emit = function(eventName, args){
+    this.emit = function (eventName, args) {
         const callbacks = this.callbacks[eventName];
         if (callbacks && callbacks.length) {
-            callbacks.forEach(cb => typeof cb === 'function' && cb.apply(null, args))
+            return callbacks.map(cb => typeof cb === 'function' && cb.apply(null, args))
         }
     }
 }
 
 export const eventsBus = new EventEmitter();
 
-export const mapToGrid = (items, getComponent, onClick, converter) => {
+/**
+ * @param converter
+ * @returns {function(*, *, *=): *}
+ */
+const getMapToGrid = converter => (items, getComponent, onClick) => {
     onClick = onClick || Function.prototype;
     return items.map((item, index) => {
         const
@@ -63,7 +69,6 @@ export const mapToGrid = (items, getComponent, onClick, converter) => {
             y={gridY}
             w={1}
             h={1}
-            {...item.data}
             onClick={() => onClick(item.x, item.y)}
         >
             {item.content}
@@ -71,14 +76,18 @@ export const mapToGrid = (items, getComponent, onClick, converter) => {
     });
 };
 
+export const mapToGridShiftBy1 = getMapToGrid((x, y) => ({x: x + 1, y: y + 1}));
+
+export const mapToGridShiftBy2 = getMapToGrid((x, y) => ({x: x + 2, y: y + 2}));
+
 export const mapShipsToGrid = ships => {
     const getComponent = shipPart => {
         switch (shipPart.type) {
-            case BasicShip.types.die:
+            case BasicShip.types.kill:
                 return Styled.ShipDieCell;
 
-            case BasicShip.types.shot:
-                return Styled.ShipShotCell;
+            case BasicShip.types.hit:
+                return Styled.ShotHitCell;
 
             case BasicShip.types.default:
             default:
@@ -86,11 +95,6 @@ export const mapShipsToGrid = ships => {
         }
     };
 
-    return ships.map(ship => mapToGrid(
-        Object.values(ship.parts),
-        getComponent,
-        null,
-        (x,y)=>({x: x+2, y: y+2})
-    ))
+    return ships.map(ship => mapToGridShiftBy2(Object.values(ship.parts), getComponent))
 };
 

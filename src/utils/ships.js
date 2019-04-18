@@ -14,9 +14,9 @@ export class BasicShip{
     }
 
     static types = {
-        default: 'default',
-        shot: 'shot',
-        die: 'die'
+        default: 'ship',
+        hit: 'hit',
+        kill: 'kill'
     };
 
     set pos({x, y, direction}){
@@ -44,7 +44,7 @@ export class BasicShip{
 
     isDie(){
         for (let key in this.parts) {
-            if (this.parts[key].type !== BasicShip.types.shot) {
+            if (this.parts[key].type !== BasicShip.types.hit) {
                 return false;
             }
         }
@@ -53,15 +53,16 @@ export class BasicShip{
 
     catchShoot = (x, y) => {
         if (this.hasPart(x, y) && this.parts[`${x};${y}`].type === BasicShip.types.default) {
-            this.parts[`${x};${y}`].type = BasicShip.types.shot;
+            this.parts[`${x};${y}`].type = BasicShip.types.hit;
 
             if (this.isDie()) {
                 for (let key in this.parts) {
-                    this.parts[key].type = BasicShip.types.die;
+                    this.parts[key].type = BasicShip.types.kill;
                 }
             }
 
-            this.dispatch(updatePlayerShip(this));
+            this.dispatch(updatePlayerShip(this)); //TODO: Move to callback
+            return this.parts[`${x};${y}`].type;
         }
     };
 }
