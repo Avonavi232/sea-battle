@@ -100,6 +100,7 @@ export default class GameConnection{
                 } else if (roomID) {
                     settings.side = gameSides.client;
                     settings.playerID = playerID;
+                    settings.roomID = roomID;
                     gameStatus = gameStatuses.waitingClient;
                     this.connectToRoom({roomID, playerID: settings.playerID})
                 } else {
@@ -137,11 +138,7 @@ export default class GameConnection{
             .then(result => {
                 if (getDeepProp(result, 'reconnect')) {
                     this.restoreGame(result);
-                    //Восстановить настройки комнаты
-                    //Восстановить карту кораблей
-                    //Восстановить карту выстрелов
                 }
-
                 return result;
             })
             .catch((e) => console.error(e));
