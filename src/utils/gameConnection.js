@@ -5,7 +5,6 @@ import config from '../config';
 import {emitEvents, gameSides, gameStatuses} from "./constants";
 import {getDeepProp} from "./functions";
 import {parse} from "query-string";
-import {setRoomSettings} from "../actions";
 
 export default class GameConnection{
     constructor(apiUrl) {
