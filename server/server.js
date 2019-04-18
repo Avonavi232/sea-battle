@@ -117,7 +117,9 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
         ack({
             reconnect: true,
             settings: room.settings,
-            shipsMap: oldPlayer.shipsMap
+            shipsMap: oldPlayer.shipsMap,
+            playerShotsMap: oldPlayer.playerShotsMap,
+            opponentShotsMap: oldPlayer.opponentShotsMap,
         });
 
         if (room.arePlayersReady()){

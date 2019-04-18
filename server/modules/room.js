@@ -83,7 +83,7 @@ class Room {
         this.sendToRoom(toClient.startGame);
     }
 
-    rotateShooters(player, updateTimerOnly){
+    rotateShooters(player, updateTimerOnly) {
         if (!updateTimerOnly) {
             player = player || this.currentShooter;
             this.currentShooter = this.getOpponent(player.playerID);
@@ -94,7 +94,7 @@ class Room {
         this.timerID = setTimeout(() => this.rotateShooters(), this.timeForShoot);
     }
 
-    assignShooter(playerID){
+    assignShooter(playerID) {
         this.sendToRoom(toClient.assignShooter, playerID, this.timeForShoot);
     }
 
@@ -108,8 +108,12 @@ class Room {
             throw new Error('shooting player is not current shooter');
         }
 
-        const opponent = this.getOpponent(player.playerID);
-        const shootResult = opponent.handleShot(...coords);
+        const
+            opponent = this.getOpponent(player.playerID),
+            shootResult = opponent.handleShot(...coords);
+
+        player.storePlayerShot(...coords, shootResult);
+        opponent.storeOpponentShot(...coords, shootResult);
 
         this.rotateShooters(null, shootResult !== Ship.types.miss);
         shootResult !== Ship.types.miss && this.assignShooter(this.currentShooter.playerID);

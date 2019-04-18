@@ -63,7 +63,12 @@ class App extends Component {
         gameConnection.events = this.gameEvents;
 
         gameConnection.restoreGame = restored => {
-            const shipsMap = restored.shipsMap.ships;
+            const
+                shipsMap = restored.shipsMap.ships,
+                {opponentShotsMap, playerShotsMap} = restored;
+
+            this.props.dispatch(addOpponentShotToMap(opponentShotsMap));
+            this.props.dispatch(addShotToMap(playerShotsMap));
 
             shipsMap
                 .map(shipData => BasicShip.recreate(shipData, this.props.dispatch))

@@ -11,6 +11,8 @@ class Player {
 		this.io = null;
 		this.roomID = null;
 		this.shipsMap = new ShipsMap();
+		this.playerShotsMap = [];
+		this.opponentShotsMap = [];
 		this.shipsPlaced = false;
 
 		this.status = 'offline';
@@ -84,6 +86,14 @@ class Player {
 		const ship = new Ship(shipData);
 		this.shipsMap.addShip(ship);
 		this.shipsMap.subscribe(shipsMapEvenets.opponentShoot, ship.catchShoot);
+	}
+
+	storeOpponentShot(x, y, type){
+		this.opponentShotsMap.push({x, y, type});
+	}
+
+	storePlayerShot(x, y, type){
+		this.playerShotsMap.push({x, y, type});
 	}
 
 	handleShot(x, y){
