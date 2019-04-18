@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<h1>Hello world</h1>
+<div id="link"></div>
+<script>
+	const div = document.querySelector('#link');
+	const a = document.createElement('a');
+	a.textContent = "Socket.io tester";
+	a.target = '_blank';
+	a.href = "http://amritb.github.io/socketio-client-tool/#url=bG9jYWxob3N0OjUwMDA=&opt=&events=";
+
+	const events =
+			['playerCreated',
+				'createNewRoom',
+				'roomEntered',
+				'knockToRoom', 'startGame', 'playerDidTurn', 'opponentDidTurn', 'matchResult',
+				'gameResult', 'chatMessage'];
+
+	events.forEach(event => a.href += `${event},`);
+
+	div.appendChild(a);
+</script>
+</body>
+</html>
