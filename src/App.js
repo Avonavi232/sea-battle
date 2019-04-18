@@ -244,10 +244,6 @@ class App extends Component {
         }
     };
 
-    placementDoneHandler = ({playerShips}) => {
-        this.socket.emit(emitEvents.placementDone, playerShips);
-    };
-
     startGameHandler = () => {
         this.props.dispatch(setGameStatus(gameStatuses.active));
     };
@@ -350,9 +346,7 @@ class App extends Component {
                                     {mapToGridShiftBy1(symbols, () => Styled.LetterCell)}
                                     {mapShipsToGrid(this.props.playerShips)}
                                 </Styled.MyBoard>
-                                <ShipPlacementPanel
-                                    onPlacementDone={this.placementDoneHandler}
-                                />
+                                <ShipPlacementPanel/>
                             </>
                         }
 

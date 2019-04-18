@@ -5,10 +5,11 @@ import {connect} from "react-redux";
 
 import * as ships from "./utils/ships";
 import {cellBg} from "./styled";
-import {addPlayerShip, setCurrent, setNotPlacedShips, setPhase} from "./actions";
+import {addPlayerShip, setCurrent, setNotPlacedShips} from "./actions";
 import config from './config';
 import {between, eventsBus} from "./utils/functions";
 import {busEvents} from "./utils/constants";
+import {gameConnection} from "./utils/gameConnection";
 
 const StyledPhase1 = styled.div`
   display: grid;
@@ -126,7 +127,7 @@ class ShipPlacementPanel extends Component {
     };
 
     placeShip = (x, y, direction) => {
-        const {dispatch, onPlacementDone, playerShips} = this.props;
+        const {dispatch, playerShips} = this.props;
 
         if (
             !between(x, -1, config.boardSize)
@@ -163,9 +164,8 @@ class ShipPlacementPanel extends Component {
             dispatch(setCurrent(nextNotPlaced));
         } else {
             dispatch(setCurrent(null));
-            onPlacementDone({
-                playerShips: [].concat(playerShips, ship)
-            });
+
+            gameConnection.placementDoneHandler([].concat(playerShips, ship));
         }
 
         dispatch(setNotPlacedShips(cache));
@@ -248,7 +248,6 @@ ShipPlacementPanel.propTypes = {
     dispatch: PropTypes.func.isRequired,
     notPlacedShips: PropTypes.object.isRequired,
     current: PropTypes.object,
-    onPlacementDone: PropTypes.func.isRequired,
     playerShips: PropTypes.array,
 };
 
