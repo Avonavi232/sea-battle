@@ -5,9 +5,10 @@ import {connect} from "react-redux";
 
 import * as ships from "./utils/ships";
 import {cellBg} from "./styled";
-import {addPlayerShip, setCurrent, setNotDistributedShips, setPhase} from "./actions";
+import {addPlayerShip, setCurrent, setNotPlacedShips, setPhase} from "./actions";
 import config from './config';
 import {between, eventsBus} from "./utils/functions";
+import {busEvents} from "./utils/constants";
 
 const StyledPhase1 = styled.div`
   display: grid;
@@ -49,7 +50,7 @@ const Form = styled.form`
   grid-gap: .3rem 1rem;
 `;
 
-class Phase1 extends Component {
+class ShipPlacementPanel extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -65,16 +66,16 @@ class Phase1 extends Component {
     componentDidMount() {
         const {dispatch} = this.props;
 
-        dispatch(setNotDistributedShips({
-            single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
-            double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
-            triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
+        dispatch(setNotPlacedShips({
+            // single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
+            // double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
+            // triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
             quadruple: [1].map(() => new ships.QuadrupleShip(null, dispatch)),
         }));
 
         this.unsubscribe = eventsBus.subscribe(
-            'click',
-            (x, y) => this.distributePlayerShip(x, y, Number(this.state.form.direction))
+            busEvents.placeShip,
+            (x, y) => this.placeShip(x, y, Number(this.state.form.direction))
         );
     }
 
@@ -83,13 +84,13 @@ class Phase1 extends Component {
     }
 
     setCurrent = type => {
-        const target = this.props.notDistributedShips[type][0];
+        const target = this.props.notPlacedShips[type][0];
         if (target) {
             this.props.dispatch(setCurrent(target))
         }
     };
 
-    getNextToDistribute = ships => {
+    getNextNotPlaced = ships => {
         const keys = Object.keys(ships);
 
         for (let i = 0; i < keys.length; i++) {
@@ -102,7 +103,7 @@ class Phase1 extends Component {
     };
 
     initialShipSubscribe = ship => {
-        eventsBus.subscribe('opponentShoot', ship.catchShoot);
+        eventsBus.subscribe(busEvents.opponentShoot, ship.catchShoot);
     };
 
     onChangeHandler = ({target}) => {
@@ -121,11 +122,11 @@ class Phase1 extends Component {
             y =  Number(this.state.form.y),
             direction = Number(this.state.form.direction);
 
-        this.distributePlayerShip(x, y, direction)
+        this.placeShip(x, y, direction)
     };
 
-    distributePlayerShip = (x, y, direction) => {
-        const {dispatch} = this.props;
+    placeShip = (x, y, direction) => {
+        const {dispatch, onPlacementDone, playerShips} = this.props;
 
         if (
             !between(x, -1, config.boardSize)
@@ -143,7 +144,7 @@ class Phase1 extends Component {
 
         this.initialShipSubscribe(ship);
 
-        const cache = {...this.props.notDistributedShips};
+        const cache = {...this.props.notPlacedShips};
 
         for (let key in cache) {
             let index = cache[key].indexOf(ship);
@@ -156,54 +157,56 @@ class Phase1 extends Component {
             }
         }
 
-        const nextToDistribute = this.getNextToDistribute(cache);
+        const nextNotPlaced = this.getNextNotPlaced(cache);
 
-        if (nextToDistribute) {
-            dispatch(setCurrent(nextToDistribute));
+        if (nextNotPlaced) {
+            dispatch(setCurrent(nextNotPlaced));
         } else {
             dispatch(setCurrent(null));
-            dispatch(setPhase(2));
+            onPlacementDone({
+                playerShips: [].concat(playerShips, ship)
+            });
         }
 
-        dispatch(setNotDistributedShips(cache));
+        dispatch(setNotPlacedShips(cache));
         dispatch(addPlayerShip(ship));
     };
 
 
     render() {
-        const {notDistributedShips, current} = this.props;
+        const {notPlacedShips, current} = this.props;
 
         return (
             <StyledPhase1>
                 <Cache>
                     {
-                        notDistributedShips.single &&
+                        notPlacedShips.single &&
                         <>
-                            <span>{notDistributedShips.single.length}x</span>
+                            <span>{notPlacedShips.single.length}x</span>
                             <Ship onClick={() => this.setCurrent('single')} size={1}/>
                         </>
                     }
 
                     {
-                        notDistributedShips.double &&
+                        notPlacedShips.double &&
                         <>
-                            <span>{notDistributedShips.double.length}x</span>
+                            <span>{notPlacedShips.double.length}x</span>
                             <Ship onClick={() => this.setCurrent('double')} size={2}/>
                         </>
                     }
 
                     {
-                        notDistributedShips.triple &&
+                        notPlacedShips.triple &&
                         <>
-                            <span>{notDistributedShips.triple.length}x</span>
+                            <span>{notPlacedShips.triple.length}x</span>
                             <Ship onClick={() => this.setCurrent('triple')} size={3}/>
                         </>
                     }
 
                     {
-                        notDistributedShips.quadruple &&
+                        notPlacedShips.quadruple &&
                         <>
-                            <span>{notDistributedShips.quadruple.length}x</span>
+                            <span>{notPlacedShips.quadruple.length}x</span>
                             <Ship onClick={() => this.setCurrent('quadruple')} size={4}/>
                         </>
                     }
@@ -241,15 +244,18 @@ class Phase1 extends Component {
     }
 }
 
-Phase1.propTypes = {
+ShipPlacementPanel.propTypes = {
     dispatch: PropTypes.func.isRequired,
-    notDistributedShips: PropTypes.object.isRequired,
+    notPlacedShips: PropTypes.object.isRequired,
     current: PropTypes.object,
+    onPlacementDone: PropTypes.func.isRequired,
+    playerShips: PropTypes.array,
 };
 
 const mapStateToProps = state => ({
-    notDistributedShips: state.notDistributedShips,
+    playerShips: state.playerShips,
+    notPlacedShips: state.notPlacedShips,
     current: state.current,
 });
 
-export default connect(mapStateToProps)(Phase1);
+export default connect(mapStateToProps)(ShipPlacementPanel);
