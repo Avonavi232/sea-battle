@@ -142,6 +142,9 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
 };
 
 const disconnectHandlerCreator = player => () => {
+    if (!player || !player.socket) {
+        return;
+    }
     player.status = 'offline';
     player.socket.eventNames().forEach(event => {
         player.socket.removeAllListeners(event);
