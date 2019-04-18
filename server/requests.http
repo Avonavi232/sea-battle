@@ -1,0 +1,14 @@
+GET http://localhost:5000/create-player
+Content-Type: application/json
+
+###
+
+POST http://localhost:5000/create-room
+Content-Type: application/json
+
+{
+  "playerID": "69a49147-7960-4b10-9c61-c3d3c92cc49b"
+}
+
+###
+
