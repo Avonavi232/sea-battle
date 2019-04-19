@@ -63,7 +63,10 @@ class App extends Component {
                 this.props.dispatch(setRoomSettings(settings));
                 gameStatus && this.props.dispatch(setGameStatus(gameStatus));
             })
-            .catch(gameStatus => this.props.dispatch(setGameStatus(gameStatus)))
+            .catch(e => {
+                window.history.pushState(null, 'Home', window.origin);
+                this.props.dispatch(setGameStatus(gameStatuses.initialServer));
+            })
     }
 
     /*Сохранение/восстановление*/

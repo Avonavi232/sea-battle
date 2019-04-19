@@ -91,7 +91,7 @@ export default class GameConnection{
                     settings.playerID = restored.playerID;
                     settings.roomID = restored.roomID;
 
-                    this.connectToRoom({
+                    return this.connectToRoom({
                         roomID: restored.roomID,
                         playerID: playerID,
                         reconnectingPlayerID: restored.playerID,
@@ -101,7 +101,7 @@ export default class GameConnection{
                     settings.playerID = playerID;
                     settings.roomID = roomID;
                     gameStatus = gameStatuses.waitingClient;
-                    this.connectToRoom({roomID, playerID: settings.playerID})
+                    return this.connectToRoom({roomID, playerID: settings.playerID})
                 } else {
                     settings.side = gameSides.server;
                     settings.playerID = playerID;
@@ -109,10 +109,6 @@ export default class GameConnection{
                 }
 
                 return Promise.resolve({settings, gameStatus});
-            })
-            .catch(e => {
-                console.error(e);
-                return Promise.reject(gameStatuses.connectError);
             })
     }
 
@@ -140,7 +136,6 @@ export default class GameConnection{
                 }
                 return result;
             })
-            .catch((e) => console.error(e));
     };
 
     emitPlacementDone(playerShips){
