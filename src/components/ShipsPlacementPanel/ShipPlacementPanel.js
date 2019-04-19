@@ -3,13 +3,13 @@ import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 import {connect} from "react-redux";
 
-import * as ships from "./utils/ships";
-import {cellBg} from "./styled";
-import {addPlayerShip, setCurrent, setNotPlacedShips} from "./actions";
-import config from './config';
-import {between, eventsBus} from "./utils/functions";
-import {busEvents} from "./utils/constants";
-import {gameConnection} from "./utils/gameConnection";
+import * as ships from "../../utils/ships";
+import {cellBg} from "../../styled";
+import {addPlayerShip, setCurrent, setNotPlacedShips} from "../../actions";
+import config from '../../config';
+import {between, eventsBus} from "../../utils/functions";
+import {busEvents} from "../../utils/constants";
+import {gameConnection} from "../../utils/gameConnection";
 
 const StyledPhase1 = styled.div`
   display: grid;
@@ -68,9 +68,9 @@ class ShipPlacementPanel extends Component {
         const {dispatch} = this.props;
 
         dispatch(setNotPlacedShips({
-            // single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
-            // double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
-            // triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
+            single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
+            double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
+            triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
             quadruple: [1].map(() => new ships.QuadrupleShip(null, dispatch)),
         }));
 

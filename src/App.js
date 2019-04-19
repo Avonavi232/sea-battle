@@ -1,9 +1,6 @@
 import React, {Component, createRef} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from "react-redux";
-import io from 'socket.io-client';
-import axios from 'axios';
-import {parse} from 'query-string';
 import shipHitSound from './sounds/shipHit.wav';
 
 //Utils
@@ -15,13 +12,12 @@ import {
     mapToGridShiftBy1,
     mapToGridShiftBy2
 } from "./utils/functions";
-import config from './config';
-import {emitEvents, gameSides, gameStatuses, onEvents, busEvents} from "./utils/constants";
+import {gameStatuses, onEvents, busEvents} from "./utils/constants";
 import {gameConnection} from "./utils/gameConnection";
 
 //Components
 import * as Styled from './styled';
-import ShipPlacementPanel from './ShipPlacementPanel';
+import ShipPlacementPanel from './components/ShipsPlacementPanel';
 import RoomCreator from './components/RoomCreator';
 import ShootTimer from './components/Timer';
 
@@ -29,10 +25,10 @@ import ShootTimer from './components/Timer';
 import {
     setGameStatus,
     setRoomSettings,
-    restoreMatchesArchive,
     addShotToMap,
     addOpponentShotToMap,
-    assignShooter, updatePlayerShip, addPlayerShip
+    assignShooter,
+    addPlayerShip
 } from "./actions";
 import {BasicShip} from "./utils/ships";
 
@@ -47,33 +43,20 @@ class App extends Component {
         }
     }
 
-
     componentDidMount() {
         this.initConnection();
 
         /*Перед уходом из игры (релоад, выгрузка) сохраняем стейт*/
-        window.addEventListener('beforeunload', this.saveGameHistory);
+        window.addEventListener('beforeunload', this.saveGameSettings);
     }
 
     componentWillUnmount() {
-        this.saveGameHistory();
+        this.saveGameSettings();
     }
 
     initConnection() {
         gameConnection.events = this.gameEvents;
-
-        gameConnection.restoreGame = restored => {
-            const
-                shipsMap = restored.shipsMap.ships,
-                {opponentShotsMap, playerShotsMap} = restored;
-
-            this.props.dispatch(addOpponentShotToMap(opponentShotsMap));
-            this.props.dispatch(addShotToMap(playerShotsMap));
-
-            shipsMap
-                .map(shipData => BasicShip.recreate(shipData, this.props.dispatch))
-                .forEach(ship => this.props.dispatch(addPlayerShip(ship)));
-        };
+        gameConnection.restoreGame = this.restoreGame;
 
         gameConnection.initConnection()
             .then(({settings, gameStatus}) => {
@@ -83,8 +66,8 @@ class App extends Component {
             .catch(gameStatus => this.props.dispatch(setGameStatus(gameStatus)))
     }
 
-    /*Сохранение/восстановление истории матча*/
-    saveGameHistory = () => {
+    /*Сохранение/восстановление*/
+    saveGameSettings = () => {
         if (this.props.gameStatus === gameStatuses.active) {
             localStorage.setItem(
                 `game_save`,
@@ -97,6 +80,20 @@ class App extends Component {
             localStorage.removeItem(`game_save`);
         }
     };
+
+    restoreGame = data => {
+        const
+            shipsMap = data.shipsMap.ships,
+            {opponentShotsMap, playerShotsMap} = data;
+
+        this.props.dispatch(addOpponentShotToMap(opponentShotsMap));
+        this.props.dispatch(addShotToMap(playerShotsMap));
+
+        shipsMap
+            .map(shipData => BasicShip.recreate(shipData, this.props.dispatch))
+            .forEach(ship => this.props.dispatch(addPlayerShip(ship)));
+    };
+
 
     /*Socket.io events*/
     get gameEvents(){
