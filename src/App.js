@@ -232,7 +232,7 @@ class App extends Component {
                                 {
                                     mapToGridShiftBy2(
                                         hoversGrid,
-                                        () => Styled.HoverCell,
+                                        () => Styled.ShipPlacementCell,
                                         (x, y) => eventsBus.emit(busEvents.placeShip, [x, y])
                                     )
                                 }

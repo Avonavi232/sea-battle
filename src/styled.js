@@ -1,9 +1,10 @@
 import React from 'react';
 import styled, {css, createGlobalStyle} from 'styled-components/macro';
-import {darken} from 'polished';
 
 import {ReactComponent as AimIcon} from './img/aim.svg';
 import {ReactComponent as HitIcon} from './img/hit.svg';
+import {ReactComponent as MissIcon} from './img/circle-sketch.svg';
+import paper from './img/paper.jpg';
 import config from './config';
 
 
@@ -21,8 +22,8 @@ export const GlobalStyle = createGlobalStyle`
 `;
 
 const theme = {
-    cellColor: '#bbe4f9',
-    inkColor: darken(0.3, '#bbe4f9'),
+    cellColor: '#d1d6ff',
+    inkColor: '#2EABEC',
     cellLineWidth: '1px',
     boardFontSize: '36px',
     boardSize: config.boardSize
@@ -55,6 +56,19 @@ export const App = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+  &:before {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    background-image: url("${paper}");
+    z-index: -1;
+    opacity: 0.4;
+  }
 `;
 
 export const Grid = styled.div`
@@ -82,7 +96,7 @@ export const MoveIndicator = styled.div`
         height: 0;
         border-style: solid;
         border-width: 50px 0 50px 50px;
-        border-color: transparent transparent transparent #6980fe;
+        border-color: transparent transparent transparent ${theme.inkColor};
     } 
 `;
 
@@ -127,14 +141,6 @@ export const Cell = styled(({x, y, w, h, ...props}) => <div {...props}/>).attrs(
   height: 100%;
 `;
 
-export const HoverCell = styled(Cell)`
-  ${cellHoverBase};
-  transition: all .2s;
-  
-  &:hover {
-    background-color: red;
-  }
-`;
 
 export const AimCell = styled(props => {
     return (
@@ -168,7 +174,7 @@ export const AimCell = styled(props => {
     animation: heartbeat 1.5s ease-in-out infinite both;
   }
   
-    @keyframes heartbeat {
+  @keyframes heartbeat {
       from {
         transform: scale(1);
         transform-origin: center center;
@@ -193,9 +199,32 @@ export const AimCell = styled(props => {
     }
 `;
 
-export const ShipCell = styled(Cell)`
-  background-color: #6a9cf8;
+
+export const ShipCell = styled(props => {
+    return (
+        <Cell {...props}>
+            <HitIcon className="hit-cell__svg"/>
+        </Cell>
+    )
+})`
+  .hit-cell__svg {
+    width: 100%;
+    height: 100%;
+    path {
+      fill: ${theme.inkColor}
+    }
+  }
 `;
+
+export const ShipPlacementCell = styled(ShipCell)`
+  ${cellHoverBase};
+  opacity: .15;
+  transition: all .2s;
+  &:hover {
+    opacity: .6;
+  }
+`;
+
 
 export const ShotHitCell = styled(props => {
     return (
@@ -235,19 +264,25 @@ export const ShipDieCell = styled(ShotHitCell)`
   opacity: 0.3;
 `;
 
-export const ShotMissCell = styled(Cell)`
+export const ShotMissCell = styled(props => {
+    return (
+        <Cell {...props}>
+            <MissIcon className="miss-cell__svg"/>
+        </Cell>
+    )
+})`
   position: relative;
   overflow: hidden;
-  &:before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: .3em;
-    height: .3em;
-    border-radius: 50%;
-    background-color: red;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .miss-cell__svg {
+    display: block;
+    width: .4em;
+    height: .4em;
+    path {
+      fill: ${theme.inkColor}
+    }
   }
 `;
 
