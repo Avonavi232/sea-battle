@@ -21,11 +21,10 @@ class RoomsContainer{
 
 	deleteRoom(roomID){
 		const room = this.getRoom(roomID);
-
 		if (room) {
-			return this.rooms.delete(room);
+			this.rooms.delete(room);
+			return true;
 		}
-
 		return false;
 	}
 }

@@ -88,6 +88,10 @@ const shootHandlerCreator = player => (coords, ack) => {
     }
 };
 
+/**
+ *
+ * @param {Player} player
+ */
 const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack = Function.prototype) => {
     const
         room = roomsContainer.getRoom(roomID),
@@ -111,6 +115,8 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
         // //Установим старому пользователю, который в комнате, новый сокет
         // //Подпишем сокет на нужные ивенты
         oldPlayer.setSocket(player.socket, io);
+        oldPlayer.status = 'online';
+        room.cancelScheduledRoomDestroy();
         room.joinSocketToRoom(player.socket)
             .then(() => subscribePlayerToSocketEvents(oldPlayer));
 
@@ -146,6 +152,10 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
 
 };
 
+/**
+ *
+ * @param {Player} player
+ */
 const disconnectHandlerCreator = player => () => {
     if (!player || !player.socket) {
         return;
@@ -154,6 +164,13 @@ const disconnectHandlerCreator = player => () => {
     player.socket.eventNames().forEach(event => {
         player.socket.removeAllListeners(event);
     });
+
+    if (player.roomID) {
+        const room = roomsContainer.getRoom(player.roomID);
+        if (room) {
+            room.handlePlayerDisconnect(player);
+        }
+    }
 
     delete player.socket;
 };

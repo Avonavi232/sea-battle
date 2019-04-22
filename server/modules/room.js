@@ -15,7 +15,8 @@ class Room {
         this.settings = Object.assign({}, defaultSetting, settings);
 
         this.currentShooter = null;
-        this.timerID = null;
+        this.rotateShootersTimerId = null;
+        this.destroyRoomTimerId = null;
         this.timeForShoot = 15000;
 
         this.roomsContainer = null; //Will be the RoomsContainer instance, when room is added to it
@@ -43,7 +44,7 @@ class Room {
 
     arePlayersReady() {
         for (let player of this.players.values()) {
-            if (!player.shipsPlaced) {
+            if (!player.shipsPlaced || !player.socket.connected) {
                 return false;
             }
         }
@@ -90,8 +91,8 @@ class Room {
             this.assignShooter(this.currentShooter.playerID);
         }
 
-        clearTimeout(this.timerID);
-        this.timerID = setTimeout(() => this.rotateShooters(), this.timeForShoot);
+        clearTimeout(this.rotateShootersTimerId);
+        this.rotateShootersTimerId = setTimeout(() => this.rotateShooters(), this.timeForShoot);
     }
 
     assignShooter(playerID) {
@@ -123,6 +124,45 @@ class Room {
 
     get length() {
         return this.players.size;
+    }
+
+
+    destroyRoom(){
+        this.roomsContainer.deleteRoom(this.roomID);
+        clearTimeout(this.rotateShootersTimerId);
+        clearTimeout(this.destroyRoomTimerId);
+
+        Array.from(this.players)
+            .forEach(player => player.deletePlayer());
+        this.cancelScheduledRoomDestroy();
+
+        this.sendToRoom('roomDestroyed');
+
+        console.log('Room is deleted. Current active rooms: ', this.roomsContainer.rooms.size);
+    }
+
+    scheduleRoomDestroy(){
+        this.destroyRoomTimerId = setTimeout(() => this.destroyRoom(), 5000);
+    }
+
+    cancelScheduledRoomDestroy(){
+        console.log('room scheluded destroy canceled');
+        clearTimeout(this.destroyRoomTimerId);
+        this.destroyRoomTimerId = null;
+    }
+
+    handlePlayerDisconnect(player){
+        this.sendToRoom('opponentDisconnect', {playerID: player.playerID});
+
+        const onlinePlayers = Array.from(this.players)
+            .filter(player => player.status === 'online');
+
+
+        if (!onlinePlayers.length) {
+            this.destroyRoom();
+        } else if (onlinePlayers.length) {
+            this.scheduleRoomDestroy();
+        }
     }
 }
 

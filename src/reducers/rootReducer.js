@@ -75,6 +75,8 @@ const assignShooter = (state, {iAmShooter}) => ({
     iAmShooter
 });
 
+const resetState = () => initialState;
+
 const handlers = {
     [C.SET_NOT_DISTRIBUTED_SHIPS]: setNotDistributedShips,
     [C.ADD_PLAYER_SHIP]: addPlayerShip,
@@ -85,6 +87,7 @@ const handlers = {
     [C.ADD_SHOT_TO_MAP]: addShotToMap,
     [C.ADD_OPPONENT_SHOT_TO_MAP]: addOpponentShotToMap,
     [C.ASSIGN_SHOOTER]: assignShooter,
+    [C.RESET_STATE]: resetState,
 };
 
 const reducer = createReducer(initialState, handlers);

@@ -12,7 +12,7 @@ import {
     mapToGridShiftBy1,
     mapToGridShiftBy2
 } from "./utils/functions";
-import {gameStatuses, onEvents, busEvents} from "./utils/constants";
+import {gameStatuses, onEvents, busEvents, gameSides} from "./utils/constants";
 import {gameConnection} from "./utils/gameConnection";
 
 //Components
@@ -28,7 +28,8 @@ import {
     addShotToMap,
     addOpponentShotToMap,
     assignShooter,
-    addPlayerShip
+    addPlayerShip,
+    resetState
 } from "./actions";
 import {BasicShip} from "./utils/ships";
 
@@ -64,17 +65,18 @@ class App extends Component {
                 const {playerID, side, roomID, reconnect} = result;
                 let gameStatus = reconnect ? gameStatuses.active : result.gameStatus;
 
-                if (!gameStatus || !playerID) {
+                if (!playerID) {
                     throw new Error(`Wrong result after connection init`);
                 }
 
                 this.props.dispatch(setRoomSettings({playerID, side, roomID}));
                 gameStatus && this.props.dispatch(setGameStatus(gameStatus));
             })
-            .catch(e => {
-                console.error(e);
-                window.history.pushState(null, 'Home', window.origin);
-                this.props.dispatch(setGameStatus(gameStatuses.initialServer));
+            .catch(({playerID, side}) => {
+                this.resetGame({
+                    settings: { playerID, side },
+                    status: gameStatuses.initialServer
+                });
             })
     }
 
@@ -131,6 +133,18 @@ class App extends Component {
             {
                 eventName: onEvents.assignShooter,
                 eventHandler: this.assignShooterHandler
+            },
+            {
+                eventName: 'opponentDisconnect',
+                eventHandler: () => console.log('opponentDisconnect')
+            },
+            {
+                eventName: 'opponentReconnect',
+                eventHandler: () => console.log('opponentReconnect')
+            },
+            {
+                eventName: 'roomDestroyed',
+                eventHandler: () => console.log('roomDestroyed')
             }
         ]
     };
@@ -151,8 +165,10 @@ class App extends Component {
     };
 
     assignShooterHandler = (shooterID, shootTime) => {
-        this.setState({shootTime});
-        this._updateTimer();
+        this.setState({
+            shootTime,
+            timerKey: Math.random()
+        });
         this.props.dispatch(assignShooter(this.props.playerID === shooterID));
     };
 
@@ -177,8 +193,17 @@ class App extends Component {
             .catch(e => console.error(e));
     };
 
-    _updateTimer = () => {
-        this.setState({timerKey: Math.random()})
+    resetGame = ({settings, status}) => {
+        window.history.pushState(null, 'Home', window.origin);
+        this.props.dispatch(resetState());
+
+        this.props.dispatch(setRoomSettings({
+            roomID: null,
+            roomUrl: null,
+            side: gameSides.server,
+            ...settings
+        }));
+        this.props.dispatch(setGameStatus(status || gameStatuses.initialServer))
     };
 
     render() {
@@ -215,9 +240,8 @@ class App extends Component {
                     {
                         gameStatus === gameStatuses.active &&
                         <>
-                            <button
-                                onClick={() => this.props.dispatch(setGameStatus(gameStatuses.initialServer))}>stop
-                                game
+                            <button onClick={this.resetGame}>
+                                stop game
                             </button>
                             <Styled.MyBoard>
                                 {mapToGridShiftBy1(symbols, () => Styled.LetterCell)}

@@ -56,6 +56,11 @@ export const setGameStatus = status => ({
     payload: {status}
 });
 
+
+export const resetState = () => ({
+    type: C.RESET_STATE
+});
+
 export const playerMove = payload => ({
     type: C.PLAYER_MOVE,
     payload

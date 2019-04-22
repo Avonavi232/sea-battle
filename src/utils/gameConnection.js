@@ -6,7 +6,7 @@ import {emitEvents, gameSides, gameStatuses} from "./constants";
 import {getDeepProp} from "./functions";
 import {parse} from "query-string";
 
-export default class GameConnection{
+export default class GameConnection {
     constructor(apiUrl) {
         this.apiUrl = apiUrl;
         this.events = null;
@@ -24,7 +24,7 @@ export default class GameConnection{
         });
     }
 
-    _subscribeSocketToEvents(){
+    _subscribeSocketToEvents() {
         this.events.forEach(e => {
             if (!e.eventName || !e.eventHandler) {
                 return;
@@ -36,7 +36,7 @@ export default class GameConnection{
         return Promise.resolve();
     }
 
-    _playerInit(playerID){
+    _playerInit(playerID) {
         return new Promise((resolve, reject) => {
             this.socket.emit(emitEvents.playerInit, {playerID}, success => {
                 return success ? resolve(this.socket) : reject(new Error('playerInit returns false'))
@@ -44,8 +44,8 @@ export default class GameConnection{
         })
     }
 
-    _knockToRoom(roomID, reconnectingPlayerID){
-        return new Promise ((resolve, reject) => {
+    _knockToRoom(roomID, reconnectingPlayerID) {
+        return new Promise((resolve, reject) => {
             this.socket.emit(emitEvents.knockToRoom, {roomID, reconnectingPlayerID}, result => {
                 if (getDeepProp(result, 'error')) {
                     reject(new Error(result.message))
@@ -81,21 +81,22 @@ export default class GameConnection{
         const
             {roomID} = parse(window.location.search),
             restored = this._restoreGameHistory();
+        let playerIDsave;
 
         return this.createPlayer()
             .then(playerID => {
+                playerIDsave = playerID;
                 if (restored) {
                     return this.connectToRoom({
+                        playerID,
                         roomID: restored.roomID,
-                        playerID: playerID,
                         reconnectingPlayerID: restored.playerID,
                     });
                 } else if (roomID) {
                     return this.connectToRoom({
                         roomID,
                         playerID,
-                        side: gameSides.client,
-                        gameStatus: gameStatuses.waitingClient
+                        side: gameSides.client
                     })
                 } else {
                     return Promise.resolve({
@@ -105,10 +106,17 @@ export default class GameConnection{
                     });
                 }
             })
+            .catch(e => {
+                console.error(e);
+                return Promise.reject({
+                    playerID: playerIDsave,
+                    side: gameSides.server
+                });
+            })
     }
 
     createRoom(settings, playerID) {
-        return axios.post(`${this.apiUrl}/create-room`, { playerID, settings })
+        return axios.post(`${this.apiUrl}/create-room`, {playerID, settings})
             .then(responce => responce.data)
             .then(({error, data}) => {
                 if (error || !data.roomID) {
@@ -134,11 +142,11 @@ export default class GameConnection{
             })
     };
 
-    emitPlacementDone(playerShips){
+    emitPlacementDone(playerShips) {
         this.socket.emit(emitEvents.placementDone, playerShips);
     }
 
-    emitShot([x, y], resolve){
+    emitShot([x, y], resolve) {
         this.socket.emit('shoot', [x, y], resolve);
     }
 }

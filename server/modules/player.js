@@ -14,6 +14,7 @@ class Player {
 		this.playerShotsMap = [];
 		this.opponentShotsMap = [];
 		this.shipsPlaced = false;
+		this.playersContainer = null;
 
 		this.status = 'offline';
 
@@ -100,8 +101,16 @@ class Player {
 		return this.shipsMap.emitShotEvent(x, y);
 	}
 
-	disconnect() {
-		this.emitToRoom('playerDisconnected', this);
+	deletePlayer(){
+		if (this.socket) {
+			this.socket.eventNames().forEach(event => {
+				this.socket.removeAllListeners(event);
+			});
+			this.socket = null;
+		}
+
+		this.io = null;
+		this.playersContainer.remove(this.playerID);
 	}
 }
 

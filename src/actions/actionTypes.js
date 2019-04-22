@@ -6,6 +6,7 @@ export const SET_CURRENT = 'SET_CURRENT';
 export const ADD_SHOT_TO_MAP = 'ADD_SHOT_TO_MAP';
 export const ADD_OPPONENT_SHOT_TO_MAP = 'ADD_OPPONENT_SHOT_TO_MAP';
 export const ASSIGN_SHOOTER = 'ASSIGN_SHOOTER';
+export const RESET_STATE = 'RESET_STATE';
 
 
 

@@ -5,6 +5,7 @@ class PlayersContainer{
 
     add(player){
         this.players.add(player);
+        player.playersContainer = this;
         return this;
     }
 
@@ -29,8 +30,9 @@ class PlayersContainer{
 
         if (player) {
             this.players.delete(player);
+            return true;
         }
-        return this;
+        return false;
     }
 
     get length(){
