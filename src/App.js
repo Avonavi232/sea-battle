@@ -14,6 +14,8 @@ import {
 } from "./utils/functions";
 import {gameStatuses, onEvents, busEvents, gameSides} from "./utils/constants";
 import {gameConnection} from "./utils/gameConnection";
+import {soundsQueue} from './utils/soundsQueue';
+import soundsBank from './sounds/soundsBank';
 
 //Components
 import * as Styled from './styled';
@@ -181,12 +183,14 @@ class App extends Component {
 
                 const shot = {x, y};
                 if (result === 'hit') {
-                    const audio = new Audio(shipHitSound);
-                    audio.volume = 0.5;
-                    audio.play();
+                    this.playSoundType('hit');
                     shot.type = 'hit';
                 } else if (result === 'miss') {
+                    this.playSoundType('miss');
                     shot.type = 'miss';
+                } else if (result === 'kill') {
+                    // this.playSoundType('kill');
+                    shot.type = 'kill';
                 }
                 this.props.dispatch(addShotToMap(shot));
             })
@@ -204,6 +208,10 @@ class App extends Component {
             ...settings
         }));
         this.props.dispatch(setGameStatus(status || gameStatuses.initialServer))
+    };
+
+    playSoundType = type => {
+      soundsQueue.play(soundsBank.getRandomWithType(type));
     };
 
     render() {
@@ -275,7 +283,10 @@ class App extends Component {
                                                 case 'hit':
                                                     return Styled.ShotHitCell;
                                                 case 'miss':
-                                                    return Styled.ShotMissCell
+                                                    return Styled.ShotMissCell;
+
+                                                case 'kill':
+                                                default: return Styled.ShotHitCell
                                             }
                                         },
                                     )
