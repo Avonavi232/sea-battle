@@ -39,7 +39,8 @@ class App extends Component {
 
         this.timerInstanceRef = createRef();
         this.state = {
-            shootTime: null
+            shootTime: null,
+            timerKey: Math.random()
         }
     }
 
@@ -63,7 +64,7 @@ class App extends Component {
                 const {playerID, side, roomID, reconnect} = result;
                 let gameStatus = reconnect ? gameStatuses.active : result.gameStatus;
 
-                if (!gameStatus || !playerID || !side) {
+                if (!gameStatus || !playerID) {
                     throw new Error(`Wrong result after connection init`);
                 }
 
@@ -128,10 +129,6 @@ class App extends Component {
                 eventHandler: this.opponentShootHandler
             },
             {
-                eventName: onEvents.chatMessage,
-                eventHandler: this.receiveChatMessageHandler
-            },
-            {
                 eventName: onEvents.assignShooter,
                 eventHandler: this.assignShooterHandler
             }
@@ -140,15 +137,6 @@ class App extends Component {
 
     startShipPlacementHandler = () => {
         this.props.dispatch(setGameStatus(gameStatuses.shipPlacement));
-    };
-
-    receiveChatMessageHandler = responce => {
-        // const {dispatch, playerID} = this.props;
-        //
-        // dispatch(actions.pushMessagesArchive({
-        //     message: responce.message,
-        //     author: playerID === responce.playerID ? 'Me' : 'Opponent'
-        // }));
     };
 
     opponentShootHandler = shot => {
@@ -190,9 +178,7 @@ class App extends Component {
     };
 
     _updateTimer = () => {
-        if (typeof getDeepProp(this.timerInstanceRef, 'current.init') === 'function') {
-            this.timerInstanceRef.current.init();
-        }
+        this.setState({timerKey: Math.random()})
     };
 
     render() {
@@ -203,37 +189,6 @@ class App extends Component {
             <Styled.App>
                 <Styled.GlobalStyle/>
                 <Styled.Grid>
-                    {/*<Styled.OpponentBoard>*/}
-                    {/*    {*/}
-                    {/*        mapToGridShiftBy1(*/}
-                    {/*            symbols,*/}
-                    {/*            () => Styled.LetterCell,*/}
-                    {/*        )*/}
-                    {/*    }*/}
-                    {/*    {*/}
-                    {/*        mapToGridShiftBy2(*/}
-                    {/*            [*/}
-                    {/*                {x: 1, y: 1},*/}
-                    {/*                {x: 1, y: 4},*/}
-                    {/*                {x: 3, y: 4},*/}
-                    {/*            ],*/}
-                    {/*            () => Styled.ShotHitCell,*/}
-                    {/*        )*/}
-                    {/*    }*/}
-                    {/*    {*/}
-                    {/*        mapToGridShiftBy2(*/}
-                    {/*            this.props.shotsMap,*/}
-                    {/*            ({type}) => {*/}
-                    {/*                switch (type) {*/}
-                    {/*                    case 'hit':*/}
-                    {/*                        return Styled.ShotHitCell;*/}
-                    {/*                    case 'miss':*/}
-                    {/*                        return Styled.ShotMissCell*/}
-                    {/*                }*/}
-                    {/*            },*/}
-                    {/*        )*/}
-                    {/*    }*/}
-                    {/*</Styled.OpponentBoard>*/}
                     {
                         gameStatus === gameStatuses.initialServer &&
                         <RoomCreator/>
@@ -303,7 +258,10 @@ class App extends Component {
                                 }
                             </Styled.OpponentBoard>
                             <Styled.MoveIndicator shooter={iAmShooter}/>
-                            <ShootTimer ref={this.timerInstanceRef} deadline={shootTime}/>
+                            {
+                                shootTime &&
+                                    <ShootTimer key={this.state.timerKey} deadline={shootTime}/>
+                            }
                         </>
                     }
                 </Styled.Grid>

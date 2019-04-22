@@ -4,7 +4,6 @@ import moment from 'moment';
 import styled from "styled-components";
 
 
-
 class Timer extends Component {
     constructor(props) {
         super(props);
@@ -20,12 +19,12 @@ class Timer extends Component {
         this.init();
     }
 
-    init(){
+    componentWillUnmount() {
         clearInterval(this.intervalID);
-        this.setState({
-            deadline: moment.duration(this.props.deadline)
-        });
+    }
 
+
+    init(){
         this.intervalID = setInterval(() => {
             const newDuration = this.state.deadline.clone();
 
