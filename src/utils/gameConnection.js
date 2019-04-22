@@ -80,35 +80,30 @@ export default class GameConnection{
     initConnection() {
         const
             {roomID} = parse(window.location.search),
-            settings = {},
             restored = this._restoreGameHistory();
-
-        let gameStatus;
 
         return this.createPlayer()
             .then(playerID => {
                 if (restored) {
-                    settings.playerID = restored.playerID;
-                    settings.roomID = restored.roomID;
-
                     return this.connectToRoom({
                         roomID: restored.roomID,
                         playerID: playerID,
                         reconnectingPlayerID: restored.playerID,
                     });
                 } else if (roomID) {
-                    settings.side = gameSides.client;
-                    settings.playerID = playerID;
-                    settings.roomID = roomID;
-                    gameStatus = gameStatuses.waitingClient;
-                    return this.connectToRoom({roomID, playerID: settings.playerID})
+                    return this.connectToRoom({
+                        roomID,
+                        playerID,
+                        side: gameSides.client,
+                        gameStatus: gameStatuses.waitingClient
+                    })
                 } else {
-                    settings.side = gameSides.server;
-                    settings.playerID = playerID;
-                    gameStatus = gameStatuses.initialServer;
+                    return Promise.resolve({
+                        playerID,
+                        gameStatus: gameStatuses.initialServer,
+                        side: gameSides.server
+                    });
                 }
-
-                return Promise.resolve({settings, gameStatus});
             })
     }
 
@@ -125,12 +120,13 @@ export default class GameConnection{
             .catch(e => Promise.reject(e))
     }
 
-    connectToRoom = ({roomID, playerID, reconnectingPlayerID}) => {
+    connectToRoom = ({roomID, playerID, reconnectingPlayerID, ...rest}) => {
         return this._initSocketConnection()
             .then(() => this._playerInit(playerID))
             .then(() => this._subscribeSocketToEvents())
             .then(() => this._knockToRoom(roomID, reconnectingPlayerID))
             .then(result => {
+                result = {...result, ...rest};
                 if (getDeepProp(result, 'reconnect')) {
                     this.restoreGame(result);
                 }

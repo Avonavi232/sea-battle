@@ -59,11 +59,19 @@ class App extends Component {
         gameConnection.restoreGame = this.restoreGame;
 
         gameConnection.initConnection()
-            .then(({settings, gameStatus}) => {
-                this.props.dispatch(setRoomSettings(settings));
+            .then(result => {
+                const {playerID, side, roomID, reconnect} = result;
+                let gameStatus = reconnect ? gameStatuses.active : result.gameStatus;
+
+                if (!gameStatus || !playerID || !side) {
+                    throw new Error(`Wrong result after connection init`);
+                }
+
+                this.props.dispatch(setRoomSettings({playerID, side, roomID}));
                 gameStatus && this.props.dispatch(setGameStatus(gameStatus));
             })
             .catch(e => {
+                console.error(e);
                 window.history.pushState(null, 'Home', window.origin);
                 this.props.dispatch(setGameStatus(gameStatuses.initialServer));
             })
@@ -87,13 +95,16 @@ class App extends Component {
     restoreGame = data => {
         const
             shipsMap = data.shipsMap.ships,
-            {opponentShotsMap, playerShotsMap} = data;
+            {opponentShotsMap, playerShotsMap, roomID, playerID} = data,
+            {dispatch} = this.props;
 
-        this.props.dispatch(addOpponentShotToMap(opponentShotsMap));
-        this.props.dispatch(addShotToMap(playerShotsMap));
+
+        dispatch(addOpponentShotToMap(opponentShotsMap));
+        dispatch(addShotToMap(playerShotsMap));
+        dispatch(setRoomSettings({roomID, playerID}));
 
         shipsMap
-            .map(shipData => BasicShip.recreate(shipData, this.props.dispatch))
+            .map(shipData => BasicShip.recreate(shipData, dispatch))
             .forEach(ship => this.props.dispatch(addPlayerShip(ship)));
     };
 

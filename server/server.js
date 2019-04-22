@@ -120,6 +120,8 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
             shipsMap: oldPlayer.shipsMap,
             playerShotsMap: oldPlayer.playerShotsMap,
             opponentShotsMap: oldPlayer.opponentShotsMap,
+            playerID: oldPlayer.playerID,
+            roomID: room.roomID
         });
 
         if (room.arePlayersReady()){
@@ -132,6 +134,7 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
     room.addPlayer(player)
         .then(() => {
             ack({
+                playerID: player.playerID,
                 roomID: room.roomID,
                 settings: room.settings
             });
