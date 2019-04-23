@@ -84,12 +84,9 @@ class Room {
         this.sendToRoom(toClient.startGame);
     }
 
-    rotateShooters(player, updateTimerOnly) {
-        if (!updateTimerOnly) {
-            player = player || this.currentShooter;
-            this.currentShooter = this.getOpponent(player.playerID);
-            this.assignShooter(this.currentShooter.playerID);
-        }
+    rotateShooters(player) {
+        this.currentShooter = player || this.getOpponent(this.currentShooter.playerID);
+        this.assignShooter(this.currentShooter.playerID);
 
         clearTimeout(this.rotateShootersTimerId);
         this.rotateShootersTimerId = setTimeout(() => this.rotateShooters(), this.timeForShoot);
@@ -111,15 +108,15 @@ class Room {
 
         const
             opponent = this.getOpponent(player.playerID),
-            shootResult = opponent.handleShot(...coords);
+            shotResult = opponent.handleShot(...coords),
+            isShotMissed = !shotResult[0];
 
-        player.storePlayerShot(...coords, shootResult);
-        opponent.storeOpponentShot(...coords, shootResult);
+        player.storePlayerShot(...coords, shotResult);
+        opponent.storeOpponentShot(...coords, shotResult);
 
-        this.rotateShooters(null, shootResult !== Ship.types.miss);
-        shootResult !== Ship.types.miss && this.assignShooter(this.currentShooter.playerID);
+        this.rotateShooters( !isShotMissed && this.currentShooter);
 
-        return shootResult;
+        return shotResult;
     }
 
     get length() {
