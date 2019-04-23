@@ -41,6 +41,11 @@ export const assignShooter = iAmShooter => ({
     payload: {iAmShooter}
 });
 
+export const setVolume = volume => ({
+    type: C.SET_VOLUME,
+    payload: {volume}
+});
+
 
 
 

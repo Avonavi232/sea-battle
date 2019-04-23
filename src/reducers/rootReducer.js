@@ -8,6 +8,7 @@ const initialState = {
     opponentShotsMap: [],
     current: null,
     iAmShooter: null,
+    volume: 0.5,
     settings: {
         chatEnable: undefined,
         maxScore: undefined,
@@ -89,6 +90,11 @@ const assignShooter = (state, {iAmShooter}) => ({
     iAmShooter
 });
 
+const setVolume = (state, {volume}) => ({
+    ...state,
+    volume
+});
+
 const resetState = () => initialState;
 
 const handlers = {
@@ -102,6 +108,7 @@ const handlers = {
     [C.ADD_OPPONENT_SHOT_TO_MAP]: addOpponentShotToMap,
     [C.ASSIGN_SHOOTER]: assignShooter,
     [C.RESET_STATE]: resetState,
+    [C.SET_VOLUME]: setVolume,
 };
 
 const reducer = createReducer(initialState, handlers);
