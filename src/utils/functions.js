@@ -98,5 +98,13 @@ export const mapShipsToGrid = ships => {
     return ships.map(ship => mapToGridShiftBy2(Object.values(ship.parts), getComponent))
 };
 
-export const wrt = str => console.log(str);
+export const debounce = (fn, delay) => {
+    let timer = null;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            fn.apply(this, args);
+        }, delay);
+    };
+};
 
