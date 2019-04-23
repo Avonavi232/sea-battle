@@ -183,7 +183,7 @@ const chatMessageHandlerCreator = player => message => {
 };
 
 const placementDoneHandlerCreator = player => (playerShipsData, ack = Function.prototype) => {
-    playerShipsData.forEach(ship => player.addShipToMap(ship));
+    playerShipsData.forEach(shipData => player.addShipToMap(shipData));
 
     if (playerShipsData.length === player.shipsMap.length) {
         player.shipsPlaced = true;
