@@ -38,6 +38,9 @@ class SoundsQueue{
     };
 
     play(sound){
+        if (!sound) {
+            return;
+        }
         this._addToQueue(sound);
         this._playSoundQueue();
     }

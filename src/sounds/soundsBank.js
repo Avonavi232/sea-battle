@@ -17,14 +17,20 @@ class SoundsBank {
     };
 
     getRandomWithType = type => {
-        const
-            soundsWithType = this.sounds[type],
-            randomIndex = Math.floor(Math.random() * soundsWithType.length);
+        const soundsWithType = this.sounds[type];
+        if (!soundsWithType) {
+            return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * soundsWithType.length);
 
         return soundsWithType[randomIndex];
     };
 
     getIndexWithType = (type, i) => {
+        if (!this.sounds[type]) {
+            return;
+        }
         return this.sounds[type][i];
     }
 }
