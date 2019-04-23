@@ -9,7 +9,7 @@ import {parse} from "query-string";
 export default class GameConnection {
     constructor(apiUrl) {
         this.apiUrl = apiUrl;
-        this.events = null;
+        this.events = [];
         this.restoreGame = Function.prototype;
     }
 
@@ -25,6 +25,10 @@ export default class GameConnection {
     }
 
     _subscribeSocketToEvents() {
+        if (!this.events.length) {
+            return Promise.resolve()
+        }
+
         this.events.forEach(e => {
             if (!e.eventName || !e.eventHandler) {
                 return;
@@ -142,8 +146,11 @@ export default class GameConnection {
             })
     };
 
-    emitPlacementDone(playerShips) {
-        this.socket.emit(emitEvents.placementDone, playerShips);
+    emitPlacementDone(playerShipsData) {
+        return new Promise(resolve => {
+            this.socket.emit(emitEvents.placementDone, playerShipsData, () => resolve());
+        })
+
     }
 
     emitShot([x, y], resolve) {
