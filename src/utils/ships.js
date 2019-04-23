@@ -58,7 +58,6 @@ export class BasicShip{
                 }
             }
 
-            console.log(this.dispatch);
             this.dispatch(updatePlayerShip(this)); //TODO: Move to callback
             return this.parts[`${x};${y}`].type;
         }

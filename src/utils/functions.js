@@ -76,6 +76,22 @@ const getMapToGrid = converter => (items, getComponent, onClick) => {
     });
 };
 
+
+/**
+ *
+ * @param obj
+ * @example
+ * {
+ *   'azaza': { 1;2': {x: 2, y: 1, type: 'hit'}, 2;2': {x: 2, y: 2, type: 'hit'},
+ *   'ololo': { 1;2': {x: 2, y: 1, type: 'hit'}, 2;2': {x: 2, y: 2, type: 'hit'},
+ * }
+ * @returns {array}
+ * @example [ {x: 1, y: 2, type: hit}, {x: 2, y: 2, type: hit} ]
+ */
+export const shotsMapAdapter = obj => {
+    return Object.values(obj).reduce((acc, el) => acc.concat(Object.values(el)), []);
+};
+
 export const mapToGridShiftBy1 = getMapToGrid((x, y) => ({x: x + 1, y: y + 1}));
 
 export const mapToGridShiftBy2 = getMapToGrid((x, y) => ({x: x + 2, y: y + 2}));
