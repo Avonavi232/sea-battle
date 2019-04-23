@@ -1,7 +1,17 @@
 class Ship {
     constructor(params) {
         this.id = params.id;
-        this.parts = params.parts;
+        this.parts = {};
+
+        for(let [key, val] of Object.entries(params.parts)) {
+            this.parts[key] = {
+                shipID: this.id,
+                partID: val.id,
+                x: val.x,
+                y: val.y,
+                type: val.type
+            }
+        }
 
         this.catchShoot = this.catchShoot.bind(this);
     }
@@ -36,9 +46,9 @@ class Ship {
                 for (let key in this.parts) {
                     this.parts[key].type = Ship.types.kill;
                 }
-                return Ship.types.kill
+                return Object.values(this.parts);
             }
-            return Ship.types.hit
+            return [this.parts[`${x};${y}`]]
         }
     };
 }
