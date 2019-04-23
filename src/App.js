@@ -10,7 +10,8 @@ import {
     mapShipsToGrid,
     getDeepProp,
     mapToGridShiftBy1,
-    mapToGridShiftBy2
+    mapToGridShiftBy2,
+    shotsMapAdapter
 } from "./utils/functions";
 import {gameStatuses, onEvents, busEvents, gameSides} from "./utils/constants";
 import {gameConnection} from "./utils/gameConnection";
@@ -19,6 +20,7 @@ import soundsBank from './sounds/soundsBank';
 
 //Components
 import * as Styled from './styled';
+import {SquaredContainer} from './components/SquareContainer';
 import ShipPlacementPanel from './components/ShipsPlacementPanel';
 import RoomCreator from './components/RoomCreator';
 import ShootTimer from './components/Timer';
@@ -50,6 +52,21 @@ class App extends Component {
     componentDidMount() {
         this.initConnection();
 
+        // this.props.dispatch(addShotToMap([
+        //     {
+        //         shipID: 'miss',
+        //         x: 1,
+        //         y: 2,
+        //         type: 'miss'
+        //     },
+        //     {
+        //         shipID: 'miss',
+        //         x: 3,
+        //         y: 4,
+        //         type: 'miss'
+        //     }
+        // ]))
+
         /*Перед уходом из игры (релоад, выгрузка) сохраняем стейт*/
         window.addEventListener('beforeunload', this.saveGameSettings);
     }
@@ -76,7 +93,7 @@ class App extends Component {
             })
             .catch(({playerID, side}) => {
                 this.resetGame({
-                    settings: { playerID, side },
+                    settings: {playerID, side},
                     status: gameStatuses.initialServer
                 });
             })
@@ -115,7 +132,7 @@ class App extends Component {
 
 
     /*Socket.io events*/
-    get gameEvents(){
+    get gameEvents() {
         //Default events
         // socket.on(onEvents.connectError, this.connectErrorHandler);
         // socket.on(onEvents.reconnect, this.socketReconnectHandler);
@@ -181,18 +198,23 @@ class App extends Component {
                     throw new Error(result.error);
                 }
 
-                const shot = {x, y};
-                if (result === 'hit') {
-                    this.playSoundType('hit');
-                    shot.type = 'hit';
-                } else if (result === 'miss') {
+                if (result.length) {
+                    const shots = result.map(shot => {
+                        const {x, y, type, shipID} = shot;
+                        return {x, y, type, shipID};
+                    });
+                    this.playSoundType(shots[0].type);
+
+                    this.props.dispatch(addShotToMap(shots));
+                } else {
                     this.playSoundType('miss');
-                    shot.type = 'miss';
-                } else if (result === 'kill') {
-                    // this.playSoundType('kill');
-                    shot.type = 'kill';
+                    this.props.dispatch(addShotToMap([{
+                        shipID: 'miss',
+                        x,
+                        y,
+                        type: 'miss'
+                    }]));
                 }
-                this.props.dispatch(addShotToMap(shot));
             })
             .catch(e => console.error(e));
     };
@@ -211,7 +233,7 @@ class App extends Component {
     };
 
     playSoundType = type => {
-      soundsQueue.play(soundsBank.getRandomWithType(type));
+        soundsQueue.play(soundsBank.getRandomWithType(type));
     };
 
     render() {
@@ -226,6 +248,44 @@ class App extends Component {
                         gameStatus === gameStatuses.initialServer &&
                         <RoomCreator/>
                     }
+
+                    {/*<>*/}
+                    {/*    <Styled.MyBoard>*/}
+                    {/*        {*/}
+                    {/*            mapToGridShiftBy1(*/}
+                    {/*                symbols,*/}
+                    {/*                () => Styled.LetterCell,*/}
+                    {/*            )*/}
+                    {/*        }*/}
+                    {/*    </Styled.MyBoard>*/}
+                    {/*    <Styled.OpponentBoard>*/}
+                    {/*        {*/}
+                    {/*            mapToGridShiftBy2(*/}
+                    {/*                shotsMapAdapter(this.props.shotsMap),*/}
+                    {/*                ({type}) => {*/}
+                    {/*                    switch (type) {*/}
+                    {/*                        case 'hit':*/}
+                    {/*                            return Styled.ShotHitCell;*/}
+                    {/*                        case 'miss':*/}
+                    {/*                            return Styled.ShotMissCell;*/}
+
+                    {/*                        case 'kill':*/}
+                    {/*                        default:*/}
+                    {/*                            return Styled.ShotHitCell*/}
+                    {/*                    }*/}
+                    {/*                },*/}
+                    {/*            )*/}
+                    {/*        }*/}
+                    {/*        {*/}
+                    {/*            mapToGridShiftBy1(*/}
+                    {/*                symbols,*/}
+                    {/*                () => Styled.LetterCell,*/}
+                    {/*            )*/}
+                    {/*        }*/}
+                    {/*    </Styled.OpponentBoard>*/}
+                    {/*    <Styled.MoveIndicator/>*/}
+                    {/*    <ShootTimer key={this.state.timerKey} deadline={1000000}/>*/}
+                    {/*</>*/}
 
                     {
                         gameStatus === gameStatuses.shipPlacement &&
@@ -277,16 +337,17 @@ class App extends Component {
                                 }
                                 {
                                     mapToGridShiftBy2(
-                                        this.props.shotsMap,
+                                        shotsMapAdapter(this.props.shotsMap),
                                         ({type}) => {
                                             switch (type) {
                                                 case 'hit':
                                                     return Styled.ShotHitCell;
                                                 case 'miss':
                                                     return Styled.ShotMissCell;
-
                                                 case 'kill':
-                                                default: return Styled.ShotHitCell
+                                                    return Styled.ShipDieCell;
+                                                default:
+                                                    return props => <p>Ы</p>
                                             }
                                         },
                                     )
@@ -295,7 +356,7 @@ class App extends Component {
                             <Styled.MoveIndicator shooter={iAmShooter}/>
                             {
                                 shootTime &&
-                                    <ShootTimer key={this.state.timerKey} deadline={shootTime}/>
+                                <ShootTimer key={this.state.timerKey} deadline={shootTime}/>
                             }
                         </>
                     }
@@ -312,7 +373,7 @@ App.propTypes = {
     roomID: PropTypes.string,
     playerID: PropTypes.string,
     side: PropTypes.string,
-    shotsMap: PropTypes.array.isRequired,
+    shotsMap: PropTypes.object.isRequired,
     opponentShotsMap: PropTypes.array.isRequired,
     iAmShooter: PropTypes.bool,
 };
