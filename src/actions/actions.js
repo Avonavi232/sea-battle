@@ -26,9 +26,9 @@ export const setCurrent = ship => ({
     payload: {ship}
 });
 
-export const addShotToMap = shot => ({
+export const addShotToMap = shots => ({
     type: C.ADD_SHOT_TO_MAP,
-    payload: {shot}
+    payload: {shots}
 });
 
 export const addOpponentShotToMap = shot => ({

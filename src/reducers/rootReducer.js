@@ -4,7 +4,7 @@ import {createReducer} from "../utils/functions";
 const initialState = {
     notPlacedShips: {},
     playerShips: [],
-    shotsMap: [],
+    shotsMap: { },
     opponentShotsMap: [],
     current: null,
     iAmShooter: null,
@@ -60,10 +60,24 @@ const setGameStatus = (state, {status}) => ({
     }
 });
 
-const addShotToMap = (state, {shot}) => ({
-    ...state,
-    shotsMap: state.shotsMap.concat(shot)
-});
+const addShotToMap = (state, {shots}) => {
+    const shotsMap = shots.reduce((acc, shot) => {
+        acc[shot.shipID] = {
+            ...acc[shot.shipID],
+            [`${shot.x};${shot.y}`]: {
+                x: shot.x,
+                y: shot.y,
+                type: shot.type
+            }
+        };
+        return acc;
+    }, {...state.shotsMap});
+
+    return {
+        ...state,
+        shotsMap
+    }
+};
 
 const addOpponentShotToMap = (state, {shot}) => ({
     ...state,
