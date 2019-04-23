@@ -6,6 +6,7 @@ import {ReactComponent as HitIcon} from './img/hit.svg';
 import {ReactComponent as MissIcon} from './img/circle-sketch.svg';
 import paper from './img/paper.jpg';
 import config from './config';
+import {SquaredContainer} from "./components/SquareContainer";
 
 
 export const GlobalStyle = createGlobalStyle`
@@ -57,6 +58,7 @@ export const App = styled.div`
   justify-content: center;
   align-items: center;
   position: relative;
+  padding: 1rem;
   &:before {
     content: '';
     display: block;
@@ -73,21 +75,33 @@ export const App = styled.div`
 
 export const Grid = styled.div`
   display: grid;
-  grid-template: 
-    "moveTimer  moveTimer     moveTimer" 100px
-    "MyBoard    MoveIndicator OpponentBoard" minmax(min-content, max-content)
-  /  min-content        min-content           min-content;
   grid-gap: 1rem;
   place-content: start center;
+  width: 100%;
+  height: 100%;
+  max-width: 900px;
+  
+  grid-template: 
+        "moveTimer  moveTimer     moveTimer" 100px
+        "MyBoard    MoveIndicator OpponentBoard" 400px //TODO можно попробовать bootstrap embed 
+      /  1fr        min-content           1fr;
+  
+  @media all and (max-width: 768px) {
+    grid-template: 
+        "MyBoard MyBoard" 2fr
+        "MoveIndicator  moveTimer" min-content
+        "OpponentBoard OpponentBoard" 3fr
+      /  1fr 1fr;
+  }
 `;
 
 export const MoveIndicator = styled.div`
     grid-area: MoveIndicator;
     place-self: center;
-    padding: 1rem;
     transition: all .3s;
     transform-origin: center;
     transform: ${({shooter}) => !shooter && 'rotate(180deg)'};
+    padding: 0 1rem;
     
     &:before {
         content: '';
@@ -98,32 +112,56 @@ export const MoveIndicator = styled.div`
         border-width: 50px 0 50px 50px;
         border-color: transparent transparent transparent ${theme.inkColor};
     } 
+    @media all and (max-width: 768px) {
+        &:before {
+            transform: rotate(90deg);
+            border-width: 35px 0 35px 25px;
+        } 
+    }
 `;
 
 
 const boardGrid = css`
   display: grid;
-  grid-template: repeat(${theme.boardSize + 1}, 1em) / repeat(${theme.boardSize + 1}, 1em);
   font-size: ${theme.boardFontSize};
-  height: ${theme.boardSize + 1}em;
-  width: ${theme.boardSize + 1}em;
+  grid-template: repeat(${theme.boardSize + 1}, 1em) / repeat(${theme.boardSize + 1}, 1em);
 `;
 
-export const MyBoard = styled.div`
-  height: 12em;
-  width: 12em;
+const Board = styled(props => {
+    return (
+        <SquaredContainer {...props} innerClassName="inner">
+            {props.children}
+        </SquaredContainer>
+    )
+})`
+  place-self: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  & > .inner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    ${cellBg()};
+    ${boardGrid}
+  }
+`;
+
+export const MyBoard = styled(Board)`
   grid-area: MyBoard;
-  place-self: center;
-  ${cellBg()}
-  ${boardGrid}
 `;
 
-export const OpponentBoard = styled.div`
+export const OpponentBoard = styled(Board)`
   grid-area: OpponentBoard;
-  place-self: center;
-  ${cellBg()}
-  ${boardGrid}
 `;
+
+// export const OpponentBoard = styled.div`
+//   grid-area: OpponentBoard;
+//   place-self: center;
+//   ${cellBg()}
+//   ${boardGrid}
+// `;
 
 
 /************CELLS***********/

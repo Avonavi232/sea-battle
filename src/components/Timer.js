@@ -57,6 +57,9 @@ export const StyledTimer = styled(Timer)`
   align-items: center;
   font-size: 36px;
   font-weight: 300;
+    @media all and (max-width: 768px) {
+        font-size: 26px; 
+    }
 `;
 
 StyledTimer.propTypes = {
