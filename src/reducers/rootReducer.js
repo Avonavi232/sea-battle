@@ -9,6 +9,7 @@ const initialState = {
     current: null,
     iAmShooter: null,
     volume: 0.5,
+    opponentDisconnectedModalOpen: false,
     settings: {
         chatEnable: undefined,
         maxScore: undefined,
@@ -97,6 +98,12 @@ const setVolume = (state, {volume}) => ({
 
 const resetState = () => initialState;
 
+
+const toggleOpponentDisconnectedModal = (state, {isOpen}) => ({
+    ...state,
+    opponentDisconnectedModalOpen: isOpen
+});
+
 const handlers = {
     [C.SET_NOT_DISTRIBUTED_SHIPS]: setNotDistributedShips,
     [C.ADD_PLAYER_SHIP]: addPlayerShip,
@@ -109,6 +116,7 @@ const handlers = {
     [C.ASSIGN_SHOOTER]: assignShooter,
     [C.RESET_STATE]: resetState,
     [C.SET_VOLUME]: setVolume,
+    [C.TOGGLE_OPPONENT_DISCONNECTED_MODAL]: toggleOpponentDisconnectedModal,
 };
 
 const reducer = createReducer(initialState, handlers);

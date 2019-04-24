@@ -46,7 +46,10 @@ export const setVolume = volume => ({
     payload: {volume}
 });
 
-
+export const toggleOpponentDisconnectedModal = isOpen => ({
+    type: C.TOGGLE_OPPONENT_DISCONNECTED_MODAL,
+    payload: {isOpen}
+});
 
 
 
