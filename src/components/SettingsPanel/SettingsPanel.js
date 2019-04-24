@@ -4,7 +4,6 @@ import {connect} from "react-redux";
 import styled from 'styled-components/macro';
 
 import TopDrawer from '../TopDrawer';
-import {debounce} from "../../utils/functions";
 import {setVolume} from "../../actions";
 import paper from "../../img/paper.jpg";
 import VolumeSetting from './VolumeSetting';
@@ -21,10 +20,6 @@ const DrawerInner = styled.div`
 `;
 
 class SettingsPanel extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         return (
             <TopDrawer Inner={DrawerInner}>

@@ -2,6 +2,7 @@ class SoundsQueue{
     constructor() {
         this.queue = [];
         this.currentlyPlayed = null;
+        this.volume = 0.5;
     }
 
     _clearAudioQueue() {
@@ -9,6 +10,7 @@ class SoundsQueue{
     }
 
     _playSound = (audio, callback) => {
+        audio.volume = this.volume;
         audio.play()
             .catch(e => {
                 this._clearAudioQueue();
