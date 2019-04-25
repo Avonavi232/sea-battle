@@ -9,13 +9,17 @@ const
     PlayersContainer = require('./modules/playersContainer'),
     Room = require('./modules/room'),
     Player = require('./modules/player'),
-    {fromClient, toClient} = require('./utils/constants');
+    {fromClient, toClient} = require('./utils/constants'),
+    {
+        subscribePlayerToSocketEvents,
+        unsubscribeSocketFromEvents,
+    } = require('./utils/functions');
 
 app.use(cors());
 app.use(bodyParser.json());
 
 const
-    roomsContainer = new RoomsContainer(),
+    roomsContainer = new RoomsContainer(io),
     playersContainer = new PlayersContainer();
 
 app.get('/', function (req, res) {
@@ -27,6 +31,8 @@ app.get('/create-player', function (req, res) {
     player.status = 'offline';
 
     playersContainer.add(player);
+
+    roomsContainer.emitRoomsUpdated();
 
     res.json({
         error: 0,
@@ -58,9 +64,10 @@ app.post('/create-room', function (req, res) {
 
     const
         roomSettings = req.body.settings || {},
-        room = new Room(io, roomSettings);
+        room = new Room(io, roomSettings, player.playerID);
 
     roomsContainer.addRoom(room);
+    roomsContainer.emitRoomsUpdated(room);
 
     res.json({
         error: 0,
@@ -70,29 +77,12 @@ app.post('/create-room', function (req, res) {
     });
 });
 
-/**
- *
- * @param {Player} player
- */
-const shootHandlerCreator = player => (coords, ack) => {
-    try {
-        const
-            room = roomsContainer.getRoom(player.roomID),
-            shotResult = room.playerShoots(player, coords);
-
-        ack(shotResult); //Ответ стреляющему
-
-        player.sendToRoomExceptMe('opponentShoot', coords); //Ответ тому, в кого стреляют
-    } catch (e) {
-        ack({error: e.message}); //Ответ стреляющему
-    }
-};
 
 /**
  *
  * @param {Player} player
  */
-const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack = Function.prototype) => {
+const knockToRoomHandlerCreator = player => ({roomID, password, reconnectingPlayerID}, ack = Function.prototype) => {
     const
         room = roomsContainer.getRoom(roomID),
         oldPlayer = room && reconnectingPlayerID && room.getPlayer(reconnectingPlayerID);
@@ -108,9 +98,7 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
     //On Reconnect
     if (oldPlayer && oldPlayer.status === 'offline'){
         //Отпишем новосозданного пользователя от ивентов
-        player.socket.eventNames().forEach(event => {
-            player.socket.removeAllListeners(event);
-        });
+        unsubscribeSocketFromEvents(null, player.socket);
 
         // //Установим старому пользователю, который в комнате, новый сокет
         // //Подпишем сокет на нужные ивенты
@@ -118,7 +106,10 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
         oldPlayer.status = 'online';
         room.cancelScheduledRoomDestroy();
         room.joinSocketToRoom(player.socket)
-            .then(() => subscribePlayerToSocketEvents(oldPlayer));
+            .then(() => {
+                subscribePlayerToSocketEvents(socketEvents, oldPlayer);
+                subscribePlayerToSocketEvents(room.roomEvents, oldPlayer)
+            });
 
         ack({
             reconnect: true,
@@ -130,6 +121,10 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
             roomID: room.roomID
         });
 
+        roomsContainer.emitRoomsUpdated(room);
+
+        console.log('reconnect', room.arePlayersReady());
+
         if (room.arePlayersReady()){
             room.startGame(oldPlayer);
         }
@@ -137,7 +132,7 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
         return;
     }
 
-    room.addPlayer(player)
+    room.addPlayer(player, password)
         .then(() => {
             ack({
                 playerID: player.playerID,
@@ -145,11 +140,13 @@ const knockToRoomHandlerCreator = player => ({roomID, reconnectingPlayerID}, ack
                 settings: room.settings
             });
 
+            roomsContainer.emitRoomsUpdated(room);
+
             if (room.isReadyToShipsPlacement()) {
                 room.sendToRoom(toClient.startShipsPlacement);
             }
-        });
-
+        })
+        .catch(error => ack({error}))
 };
 
 /**
@@ -161,54 +158,20 @@ const disconnectHandlerCreator = player => () => {
         return;
     }
     player.status = 'offline';
-    player.socket.eventNames().forEach(event => {
-        player.socket.removeAllListeners(event);
-    });
+
+    unsubscribeSocketFromEvents(null, player.socket);
 
     if (player.roomID) {
         const room = roomsContainer.getRoom(player.roomID);
         if (room) {
-            room.handlePlayerDisconnect(player);
+            room.playerLeftHandler(player);
         }
     }
 
     delete player.socket;
 };
 
-const chatMessageHandlerCreator = player => message => {
-    player.sendToRoom('chatMessage', {
-        message,
-        playerID: player.playerID
-    });
-};
-
-const placementDoneHandlerCreator = player => (playerShipsData, ack = Function.prototype) => {
-    playerShipsData.forEach(shipData => player.addShipToMap(shipData));
-
-    if (playerShipsData.length === player.shipsMap.length) {
-        player.shipsPlaced = true;
-        player.sendToRoomExceptMe(toClient.opponentsShipsPlaced);
-        ack(true);
-    } else {
-        return ack(false);
-    }
-
-
-    const room = roomsContainer.getRoom(player.roomID);
-    if (room.arePlayersReady()){
-        room.startGame(player);
-    }
-};
-
 const socketEvents = [
-    {
-        name: fromClient.shoot,
-        handlerCreator: shootHandlerCreator
-    },
-    {
-        name: fromClient.placementDone,
-        handlerCreator: placementDoneHandlerCreator
-    },
     {
         name: fromClient.knockToRoom,
         handlerCreator: knockToRoomHandlerCreator
@@ -216,18 +179,8 @@ const socketEvents = [
     {
         name: fromClient.disconnect,
         handlerCreator: disconnectHandlerCreator
-    },
-    {
-        name: fromClient.chatMessage,
-        handlerCreator: chatMessageHandlerCreator
     }
 ];
-
-const subscribePlayerToSocketEvents = player => {
-    socketEvents.forEach(event => {
-        player.listen(event.name, event.handlerCreator(player));
-    });
-};
 
 io.on('connection', socket => {
     socket.on(fromClient.playerInit, ({playerID}, ack = Function.prototype) => {
@@ -241,7 +194,7 @@ io.on('connection', socket => {
         player.setSocket(socket, io);
 
         try {
-            subscribePlayerToSocketEvents(player);
+            subscribePlayerToSocketEvents(socketEvents, player);
             player.status = 'online';
 
             ack(true);

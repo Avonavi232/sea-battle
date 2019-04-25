@@ -9,6 +9,7 @@ const fromClient = {
   knockToRoom: 'knockToRoom',
   disconnect: 'disconnect',
   chatMessage: 'chatMessage',
+  leaveRoom: 'leaveRoom'
 };
 
 const toClient = {

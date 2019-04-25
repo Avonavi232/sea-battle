@@ -1,6 +1,8 @@
 class RoomsContainer{
-	constructor(){
+	constructor(io){
 		this.rooms = new Set();
+		this.io = io;
+
 		this.getRoom = this.getRoom.bind(this);
 	}
 
@@ -26,6 +28,26 @@ class RoomsContainer{
 			return true;
 		}
 		return false;
+	}
+
+	getRoomData(room){
+		return {
+			roomID: room.roomID,
+			name: room.settings.name,
+			protected: !!room.settings.password,
+			online: room.players.size,
+			size: room.settings.maxPlayers
+		}
+	}
+
+	emitRoomsUpdated(room, toDelete){
+		let data;
+		if (room) {
+			data = toDelete ? [{roomID: room.roomID, delete: true}] : [this.getRoomData(room)];
+		} else {
+			data = Array.from(this.rooms).map(room => this.getRoomData(room));
+		}
+		this.io.emit('roomUpdated', data);
 	}
 }
 

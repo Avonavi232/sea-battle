@@ -18,10 +18,6 @@ class Player {
 
 		this.status = 'offline';
 
-		this.statistics = {
-			wins: 0
-		};
-
 		this.listen = this.listen.bind(this);
 	}
 
@@ -73,7 +69,7 @@ class Player {
 
 	sendToRoomExceptMe(event, ...args){
 		if (this.isSocketReady() && this.isSocketInRoom()) {
-			this.socket.to(this.roomID).emit(event, ...args);
+			this.socket.to(this.roomID).broadcast.emit(event, ...args);
 		}
 	}
 
@@ -101,16 +97,11 @@ class Player {
 		return this.shipsMap.emitShotEvent(x, y);
 	}
 
-	deletePlayer(){
-		if (this.socket) {
-			this.socket.eventNames().forEach(event => {
-				this.socket.removeAllListeners(event);
-			});
-			this.socket = null;
-		}
-
-		this.io = null;
-		this.playersContainer.remove(this.playerID);
+	resetGameData(){
+		this.shipsMap = new ShipsMap();
+		this.playerShotsMap = [];
+		this.opponentShotsMap = [];
+		this.shipsPlaced = false;
 	}
 }
 
