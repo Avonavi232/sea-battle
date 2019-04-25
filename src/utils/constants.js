@@ -32,7 +32,9 @@ export const emitEvents = {
     knockToRoom: 'knockToRoom',
     chatMessage: 'chatMessage',
     reconnectToRoom: 'reconnectToRoom',
-    placementDone: 'placementDone'
+    placementDone: 'placementDone',
+    shoot: 'shoot',
+    leaveRoom: 'leaveRoom'
 };
 
 export const busEvents = {
