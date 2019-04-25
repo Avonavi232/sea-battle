@@ -43,16 +43,16 @@ export default class GameConnection {
     _playerInit(playerID) {
         return new Promise((resolve, reject) => {
             this.socket.emit(emitEvents.playerInit, {playerID}, success => {
-                return success ? resolve(this.socket) : reject(new Error('playerInit returns false'))
+                return success ? resolve(playerID) : reject(new Error('playerInit returns false'))
             });
         })
     }
 
-    _knockToRoom(roomID, reconnectingPlayerID) {
+    _knockToRoom(roomID, reconnectingPlayerID, password) {
         return new Promise((resolve, reject) => {
-            this.socket.emit(emitEvents.knockToRoom, {roomID, reconnectingPlayerID}, result => {
+            this.socket.emit(emitEvents.knockToRoom, {roomID, password, reconnectingPlayerID}, result => {
                 if (getDeepProp(result, 'error')) {
-                    reject(new Error(result.message))
+                    reject(new Error(result.error))
                 } else {
                     resolve(result);
                 }
@@ -87,7 +87,10 @@ export default class GameConnection {
             restored = this._restoreGameHistory();
         let playerIDsave;
 
-        return this.createPlayer()
+        return this._initSocketConnection()
+            .then(() => this._subscribeSocketToEvents())
+            .then(() => this.createPlayer())
+            .then(playerID => this._playerInit(playerID))
             .then(playerID => {
                 playerIDsave = playerID;
                 if (restored) {
@@ -133,10 +136,7 @@ export default class GameConnection {
     }
 
     connectToRoom = ({roomID, playerID, reconnectingPlayerID, ...rest}) => {
-        return this._initSocketConnection()
-            .then(() => this._playerInit(playerID))
-            .then(() => this._subscribeSocketToEvents())
-            .then(() => this._knockToRoom(roomID, reconnectingPlayerID))
+        return this._knockToRoom(roomID, reconnectingPlayerID, rest.password)
             .then(result => {
                 result = {...result, ...rest};
                 if (getDeepProp(result, 'reconnect')) {
@@ -147,14 +147,29 @@ export default class GameConnection {
     };
 
     emitPlacementDone(playerShipsData) {
-        return new Promise(resolve => {
-            this.socket.emit(emitEvents.placementDone, playerShipsData, () => resolve());
+        return new Promise((resolve, reject) => {
+            this.socket.emit(emitEvents.placementDone, playerShipsData, success => {
+                success ? resolve() : reject(new Error('emitPlacementDone failure'))
+            });
         })
+            .catch(e => {
+                console.error(e);
+            })
 
     }
 
     emitShot([x, y], resolve) {
-        this.socket.emit('shoot', [x, y], resolve);
+        this.socket.emit(emitEvents.shoot, [x, y], resolve);
+    }
+
+    emitLeaveRoom() {
+        return new Promise(resolve => {
+            if (this.socket.connected) {
+                this.socket.emit(emitEvents.leaveRoom, () => resolve(true))
+            } else {
+                resolve();
+            }
+        });
     }
 }
 
