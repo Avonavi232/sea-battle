@@ -4,40 +4,20 @@ import PropTypes from 'prop-types';
 
 import {getDeepProp} from "../utils/functions";
 import {gameConnection} from "../utils/gameConnection";
-import {gameSides, gameStatuses} from "../utils/constants";
-import {setGameStatus, setRoomSettings} from "../actions";
 
 class RoomCreator extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            maxScore: 3,
-            chatEnable: true
+            name: 'Default',
+            password: '',
+            privateRoom: false
         }
     }
 
     handleSubmit = event => {
         event.preventDefault();
         gameConnection.createRoom(this.state, this.props.playerID)
-            .then(roomID => gameConnection.connectToRoom({roomID, playerID: this.props.playerID}))
-            .then(responce => this.handleRoomEntered(responce))
-            .catch(e => console.error(e))
-    };
-
-    handleRoomEntered = ({roomID, settings}) => {
-        const {dispatch, side} = this.props;
-        let status;
-
-        settings.roomUrl = `${window.location.origin}/?roomID=${roomID}`;
-        settings.roomID = roomID;
-
-        if (side === gameSides.server) {
-            status = gameStatuses.waitingServer;
-            window.history.pushState(null, 'RoomName', settings.roomUrl);
-        }
-
-        dispatch(setRoomSettings(settings));
-        status && dispatch(setGameStatus(status));
     };
 
     handleInputChange = event => {
@@ -49,47 +29,55 @@ class RoomCreator extends Component {
             this.setState({
                 [event.target.name]: Number(event.target.value)
             })
+        } else {
+            this.setState({
+                [event.target.name]: event.target.value
+            })
         }
     };
 
 
     render() {
         return (
-            <section className="startgame-form">
-                <div className="container">
-                    <form
-                        className="startgame-form__form"
-                        action="#"
-                        onSubmit={this.handleSubmit}
-                    >
-                        <div className="startgame-form__item startgame-form__submit">
-                            <button type="submit" className="button button_main">Get ready!</button>
-                        </div>
-                        <div className="startgame-form__item startgame-form__checkbox">
-                            <label>
-                                <input
-                                    name="chatEnable"
-                                    type="checkbox"
-                                    checked={this.state.chatEnable}
-                                    onChange={this.handleInputChange}
-                                />
-                                <span>Chat Enable</span>
-                            </label>
-                        </div>
-                        <div className="startgame-form__item startgame-form__input">
-                            <label>
-                                <input
-                                    value={this.state.maxScore}
-                                    onChange={this.handleInputChange}
-                                    name="maxScore"
-                                    type="number"
-                                />
-                                <span>points play up to</span>
-                            </label>
-                        </div>
-                    </form>
+            <form onSubmit={this.handleSubmit}>
+
+                <div className="form-group">
+                    <input
+                        name="name"
+                        type="text"
+                        className="form-control"
+                        placeholder="Room name"
+                        onChange={this.handleInputChange}
+                    />
                 </div>
-            </section>
+
+                <div className="form-group form-check">
+                    <input
+                        name="privateRoom"
+                        type="checkbox"
+                        className="form-check-input"
+                        id="isPrivateRoom"
+                        checked={this.state.privateRoom}
+                        onChange={this.handleInputChange}
+                    />
+                    <label className="form-check-label" htmlFor="isPrivateRoom">Private room</label>
+                </div>
+
+                {
+                    this.state.privateRoom &&
+                    <div className="form-group">
+                        <input
+                            name="password"
+                            type="password"
+                            className="form-control"
+                            placeholder="Password"
+                            onChange={this.handleInputChange}
+                        />
+                    </div>
+                }
+
+                <button type="submit" className="btn btn-primary">Submit</button>
+            </form>
         );
     }
 }
