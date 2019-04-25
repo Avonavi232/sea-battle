@@ -4,12 +4,29 @@ import {createReducer} from "../utils/functions";
 const initialState = {
     notPlacedShips: {},
     playerShips: [],
-    shotsMap: { },
+    shotsMap: {},
     opponentShotsMap: [],
     current: null,
     iAmShooter: null,
     volume: 0.5,
     opponentDisconnectedModalOpen: false,
+    roomDestroyDeadline: null,
+    onlineRooms: {
+        'aasdf': {
+            roomID: 'aasdf',
+            name: 'Azaza room',
+            protected: false,
+            online: 2,
+            size: 2
+        },
+        'fghjfgh': {
+            roomID: 'fghjfgh',
+            name: 'Ololo room',
+            protected: true,
+            online: 1,
+            size: 2,
+        }
+    },
     settings: {
         chatEnable: undefined,
         maxScore: undefined,
@@ -96,13 +113,42 @@ const setVolume = (state, {volume}) => ({
     volume
 });
 
-const resetState = () => initialState;
+const resetState = state => ({
+    ...initialState,
+    onlineRooms: state.onlineRooms,
+    settings: {
+        ...initialState.settings,
+        playerID: state.settings.playerID,
+    }
+});
 
 
 const toggleOpponentDisconnectedModal = (state, {isOpen}) => ({
     ...state,
     opponentDisconnectedModalOpen: isOpen
 });
+
+const setRoomDestroyDeadline = (state, {deadline}) => ({
+    ...state,
+    roomDestroyDeadline: deadline
+});
+
+const updateOnlineRooms = (state, {roomsData}) => {
+    const updatedOnlineRooms = {...state.onlineRooms};
+
+    roomsData.forEach(roomData => {
+        if (roomData.delete) {
+            delete updatedOnlineRooms[roomData.roomID]
+        } else {
+            updatedOnlineRooms[roomData.roomID] = {...roomData}
+        }
+    });
+
+    return {
+        ...state,
+        onlineRooms: updatedOnlineRooms
+    };
+};
 
 const handlers = {
     [C.SET_NOT_DISTRIBUTED_SHIPS]: setNotDistributedShips,
@@ -117,6 +163,8 @@ const handlers = {
     [C.RESET_STATE]: resetState,
     [C.SET_VOLUME]: setVolume,
     [C.TOGGLE_OPPONENT_DISCONNECTED_MODAL]: toggleOpponentDisconnectedModal,
+    [C.SET_ROOM_DESTROY_DEADLINE]: setRoomDestroyDeadline,
+    [C.UPDATE_ONLINE_ROOMS]: updateOnlineRooms,
 };
 
 const reducer = createReducer(initialState, handlers);
