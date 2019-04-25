@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
 import styled from 'styled-components/macro';
+import {connect} from "react-redux";
 
 import paper from '../img/paper.jpg';
 import withCountdownTimer from './withCountdownTimer';
@@ -49,20 +50,29 @@ const Timer = withCountdownTimer(StyledTimer);
 const OpponentDisconnectedModal = props => {
     return (
         <Modal
-            isOpen={props.isOpen}
+            isOpen={props.opponentDisconnectedModalOpen}
             style={customStyles}
-            contentLabel="Example Modal"
         >
             <h2>Opponent is disconnected</h2>
-            <h3>Room will be removed after: {<Timer deadline={150000}/>}</h3>
+            <h3>Room will be removed after:
+                {
+                    props.roomDestroyDeadline && <Timer deadline={props.roomDestroyDeadline}/>
+                }
+            </h3>
             <button onClick={props.onConfirmLeaveRoom}>Leave room</button>
         </Modal>
     );
 };
 
 OpponentDisconnectedModal.propTypes = {
-    isOpen: PropTypes.bool.isRequired,
     onConfirmLeaveRoom: PropTypes.func.isRequired,
+    opponentDisconnectedModalOpen: PropTypes.bool.isRequired,
+    roomDestroyDeadline: PropTypes.number,
 };
 
-export default OpponentDisconnectedModal;
+const mapStateToProps = state => ({
+    opponentDisconnectedModalOpen: state.opponentDisconnectedModalOpen,
+    roomDestroyDeadline: state.roomDestroyDeadline
+});
+
+export default connect(mapStateToProps)(OpponentDisconnectedModal);
