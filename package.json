@@ -1,10 +1,12 @@
 {
   "name": "sea-battle",
+  "homepage": "https://avonavi232.github.com/sea-battle",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "axios": "^0.18.0",
     "bootstrap": "^4.3.1",
+    "gh-pages": "^2.0.1",
     "input-range-scss": "^1.5.1",
     "moment": "^2.24.0",
     "node-sass": "^4.11.0",
@@ -27,7 +29,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deployHeroku": "git subtree push --prefix server heroku master",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": "react-app"

@@ -90,9 +90,9 @@ class ShipPlacementPanel extends Component {
         const {dispatch} = this.props;
 
         const shipsToPlace = {
-            // single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
-            // double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
-            // triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
+            single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
+            double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
+            triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
             quadruple: [1].map(() => new ships.QuadrupleShip(null, dispatch)),
         };
 
