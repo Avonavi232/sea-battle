@@ -2,53 +2,87 @@ import React, {Component} from 'react';
 import styled from 'styled-components/macro';
 import PropTypes from 'prop-types';
 import {connect} from "react-redux";
+import Switch from 'rc-switch';
+import 'rc-switch/assets/index.css';
 
 import * as ships from "../../utils/ships";
-import {cellBg} from "../../styled";
+import * as Styled from "../../styled";
 import {addPlayerShip, setCurrent, setNotPlacedShips} from "../../actions";
 import config from '../../config';
 import {between, eventsBus} from "../../utils/functions";
 import {busEvents} from "../../utils/constants";
 import {gameConnection} from "../../utils/gameConnection";
 
-const StyledPhase1 = styled.div`
+const Container = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
-  grid-area: OpponentBoard;
-  
-  border: 1px solid red;
-  padding: 1rem;
+  grid-template-rows: repeat(3, min-content);
+  grid-gap: 2rem;
 `;
 
-const Cache = styled.div`
+const NotPlaced = styled.div`
   display: grid;
   grid-template-columns: min-content 1fr;
   grid-auto-rows: min-content;
-  grid-gap: 1rem;
+  grid-gap: .5rem;
 `;
 
-const Ship = styled(({size, ...props}) => <div {...props}/>)`
-  font-size: 20px;
-  width: ${({size}) => `${size}em`};
-  height: 1em;
-  ${cellBg()}
-  &:hover {
-    cursor: pointer;
-  }
+const Ship = styled(({size, vertical, ...props}) => {
+    return (
+        <div {...props}>
+            {
+                [...Array(size)].map((e, i) => <Styled.ShipCell className="ship-cell" key={i}/>)
+            }
+        </div>
+    )
+})`
+    display: flex;
+    width: ${({size}) => `${size}em`};
+    transition: transform .2s;
 `;
 
-const Current = styled(Ship)`
+const HoverShip = styled(Ship)`
+    &:hover {
+        cursor: pointer;
+        transform: scale(1.1);
+    }
+`;
+
+const CurrentShip = styled(Ship)`
   font-size: 30px;
-  &:hover {
-    cursor: default;
+  transform-origin: .5em .5em;
+  transform: ${({vertical}) => vertical ? 'rotate(90deg)' : ''};
+`;
+
+const Panel = styled.div`
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  grid-gap: 1rem;
+  align-items: center;
+`;
+
+const Title = styled.h2`
+  font-weight: 300;
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-bottom: 0;
+`;
+
+const StyledSwitch = styled(Switch)`
+  && {
+    border: none;
+    background-color: ${({theme}) => theme.inkColor};
+  }
+  &.rc-switch-checked {
+    border: none;
+    background-color: ${({theme}) => theme.greenInkColor};
   }
 `;
 
-const Form = styled.form`
+const SwitchContainer = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: min-content;
-  grid-gap: .3rem 1rem;
+  grid-template-columns: repeat(3, min-content);
+  align-items: center;
+  grid-gap: .5rem;
 `;
 
 class ShipPlacementPanel extends Component {
@@ -63,21 +97,28 @@ class ShipPlacementPanel extends Component {
         }
     }
 
-
     componentDidMount() {
         const {dispatch} = this.props;
 
-        dispatch(setNotPlacedShips({
-            // single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
-            // double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
+        const shipsToPlace = {
+            single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
+            double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
             triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
             quadruple: [1].map(() => new ships.QuadrupleShip(null, dispatch)),
-        }));
+        };
+
+        dispatch(setNotPlacedShips(shipsToPlace));
 
         this.unsubscribe = eventsBus.subscribe(
             busEvents.placeShip,
             (x, y) => this.placeShip(x, y, Number(this.state.form.direction))
         );
+
+        const nextNotPlaced = this.getNextNotPlaced(shipsToPlace);
+
+        if (nextNotPlaced) {
+            dispatch(setCurrent(nextNotPlaced));
+        }
     }
 
     componentWillUnmount() {
@@ -112,16 +153,6 @@ class ShipPlacementPanel extends Component {
         })
     };
 
-    onSubmitHandler = (event) => {
-        event.preventDefault();
-        const
-            x =  Number(this.state.form.x),
-            y =  Number(this.state.form.y),
-            direction = Number(this.state.form.direction);
-
-        this.placeShip(x, y, direction)
-    };
-
     placeShip = (x, y, direction) => {
         const {dispatch, playerShips} = this.props;
 
@@ -144,7 +175,7 @@ class ShipPlacementPanel extends Component {
         for (let key in cache) {
             let index = cache[key].indexOf(ship);
 
-            if(index !== -1) {
+            if (index !== -1) {
                 const clone = cache[key].slice();
                 clone.splice(index, 1);
                 cache[key] = clone;
@@ -171,13 +202,14 @@ class ShipPlacementPanel extends Component {
         const {notPlacedShips, current} = this.props;
 
         return (
-            <StyledPhase1>
-                <Cache>
+            <Container>
+                <Title>Your Navy!</Title>
+                <NotPlaced>
                     {
                         notPlacedShips.single &&
                         <>
                             <span>{notPlacedShips.single.length}x</span>
-                            <Ship onClick={() => this.setCurrent('single')} size={1}/>
+                            <HoverShip onClick={() => this.setCurrent('single')} size={1}/>
                         </>
                     }
 
@@ -185,7 +217,7 @@ class ShipPlacementPanel extends Component {
                         notPlacedShips.double &&
                         <>
                             <span>{notPlacedShips.double.length}x</span>
-                            <Ship onClick={() => this.setCurrent('double')} size={2}/>
+                            <HoverShip onClick={() => this.setCurrent('double')} size={2}/>
                         </>
                     }
 
@@ -193,7 +225,7 @@ class ShipPlacementPanel extends Component {
                         notPlacedShips.triple &&
                         <>
                             <span>{notPlacedShips.triple.length}x</span>
-                            <Ship onClick={() => this.setCurrent('triple')} size={3}/>
+                            <HoverShip onClick={() => this.setCurrent('triple')} size={3}/>
                         </>
                     }
 
@@ -201,39 +233,39 @@ class ShipPlacementPanel extends Component {
                         notPlacedShips.quadruple &&
                         <>
                             <span>{notPlacedShips.quadruple.length}x</span>
-                            <Ship onClick={() => this.setCurrent('quadruple')} size={4}/>
+                            <HoverShip onClick={() => this.setCurrent('quadruple')} size={4}/>
                         </>
                     }
-                </Cache>
+                </NotPlaced>
 
                 {
                     current ?
                         <>
-                            <Current
-                                size={current.length}
-                            />
 
 
-                            <Form onSubmit={this.onSubmitHandler}>
-                                <span>x</span>
-                                <input onChange={this.onChangeHandler} name="x" type="number" placeholder="x" value={this.state.form.x}/>
-
-                                <span>y</span>
-                                <input onChange={this.onChangeHandler} name="y" type="number" placeholder="y" value={this.state.form.y}/>
-
-                                <span>horizontal</span>
-                                <input onChange={this.onChangeHandler} name="direction" type="radio" value="0" checked={this.state.form.direction === '0'}/>
-
-                                <span>vertical</span>
-                                <input onChange={this.onChangeHandler} name="direction" type="radio" value="1" checked={this.state.form.direction === '1'}/>
-
-                                <button>Поставить</button>
-                            </Form>
+                            <Panel>
+                                <CurrentShip
+                                    size={current.length}
+                                    vertical={this.state.form.direction === '1'}
+                                />
+                                <SwitchContainer>
+                                    <span>horizontal</span>
+                                    <StyledSwitch
+                                        onChange={value => this.onChangeHandler({
+                                            target: {
+                                                name: 'direction',
+                                                value: value ? '1' : '0'
+                                            }
+                                        })}
+                                    />
+                                    <span>vertical</span>
+                                </SwitchContainer>
+                            </Panel>
                         </>
                         :
                         null
                 }
-            </StyledPhase1>
+            </Container>
         );
     }
 }

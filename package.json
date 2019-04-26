@@ -10,6 +10,7 @@
     "node-sass": "^4.11.0",
     "polished": "^3.2.0",
     "query-string": "^6.4.2",
+    "rc-switch": "^1.9.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-modal": "^3.8.1",

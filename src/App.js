@@ -1,7 +1,7 @@
-import React, {Component, createRef} from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from "react-redux";
-import shipHitSound from './sounds/shipHit.wav';
+
 
 //Utils
 import {symbols, hoversGrid} from "./utils/lettersGrid";
@@ -11,7 +11,7 @@ import {
     getDeepProp,
     mapToGridShiftBy1,
     mapToGridShiftBy2,
-    shotsMapAdapter
+    shotsMapAdapter, debounce
 } from "./utils/functions";
 import {gameStatuses, onEvents, busEvents, gameSides} from "./utils/constants";
 import {gameConnection} from "./utils/gameConnection";
@@ -20,10 +20,13 @@ import soundsBank from './sounds/soundsBank';
 
 //Components
 import * as Styled from './styled';
-import {SquaredContainer} from './components/SquareContainer';
 import ShipPlacementPanel from './components/ShipsPlacementPanel';
-import RoomCreator from './components/RoomCreator';
 import ShootTimer from './components/Timer';
+import SettingsPanel from './components/SettingsPanel/SettingsPanel';
+import OpponentDisconnectedModal from './components/OpponentDisconnectedModal';
+import JoinRoomPage from './components/JoinRoomPage';
+import ShipsPlacementPage from './components/ShipsPlacementPage';
+
 
 //Actions
 import {
@@ -33,7 +36,10 @@ import {
     addOpponentShotToMap,
     assignShooter,
     addPlayerShip,
-    resetState
+    resetState,
+    toggleOpponentDisconnectedModal,
+    setRoomDestroyDeadline,
+    updateOnlineRooms,
 } from "./actions";
 import {BasicShip} from "./utils/ships";
 
@@ -42,7 +48,6 @@ class App extends Component {
     constructor(props) {
         super(props);
 
-        this.timerInstanceRef = createRef();
         this.state = {
             shootTime: null,
             timerKey: Math.random()
@@ -81,19 +86,19 @@ class App extends Component {
 
         gameConnection.initConnection()
             .then(result => {
-                const {playerID, side, roomID, reconnect} = result;
+                const {playerID, roomID, reconnect} = result;
                 let gameStatus = reconnect ? gameStatuses.active : result.gameStatus;
 
                 if (!playerID) {
                     throw new Error(`Wrong result after connection init`);
                 }
 
-                this.props.dispatch(setRoomSettings({playerID, side, roomID}));
+                this.props.dispatch(setRoomSettings({playerID, roomID}));
                 gameStatus && this.props.dispatch(setGameStatus(gameStatus));
             })
-            .catch(({playerID, side}) => {
-                this.resetGame({
-                    settings: {playerID, side},
+            .catch(({playerID}) => {
+                this.leaveRoom({
+                    settings: {playerID},
                     status: gameStatuses.initialServer
                 });
             })
@@ -155,15 +160,20 @@ class App extends Component {
             },
             {
                 eventName: 'opponentDisconnect',
-                eventHandler: () => console.log('opponentDisconnect')
-            },
-            {
-                eventName: 'opponentReconnect',
-                eventHandler: () => console.log('opponentReconnect')
+                eventHandler: ({deadline}) => {
+                    if (!this.props.opponentDisconnectedModalOpen) {
+                        this.props.dispatch(setRoomDestroyDeadline(deadline));
+                        this.props.dispatch(toggleOpponentDisconnectedModal(true));
+                    }
+                }
             },
             {
                 eventName: 'roomDestroyed',
-                eventHandler: () => console.log('roomDestroyed')
+                eventHandler: () => this.resetGameState()
+            },
+            {
+                eventName: 'roomUpdated',
+                eventHandler: roomsData => this.props.dispatch(updateOnlineRooms(roomsData))
             }
         ]
     };
@@ -180,7 +190,11 @@ class App extends Component {
     };
 
     startGameHandler = () => {
-        this.props.dispatch(setGameStatus(gameStatuses.active));
+        const {dispatch, opponentDisconnectedModalOpen} = this.props;
+        dispatch(setGameStatus(gameStatuses.active));
+        if (opponentDisconnectedModalOpen) {
+            dispatch(toggleOpponentDisconnectedModal(false));
+        }
     };
 
     assignShooterHandler = (shooterID, shootTime) => {
@@ -219,148 +233,115 @@ class App extends Component {
             .catch(e => console.error(e));
     };
 
-    resetGame = ({settings, status}) => {
+    leaveRoom = (options = {}) => {
+        gameConnection.emitLeaveRoom()
+            .then(() => this.resetGameState(options))
+
+    };
+
+    resetGameState = (options = {}) => {
         window.history.pushState(null, 'Home', window.origin);
+
         this.props.dispatch(resetState());
 
         this.props.dispatch(setRoomSettings({
-            roomID: null,
-            roomUrl: null,
-            side: gameSides.server,
-            ...settings
+            ...options.settings
         }));
-        this.props.dispatch(setGameStatus(status || gameStatuses.initialServer))
+
+        this.props.dispatch(setGameStatus(options.status || gameStatuses.initialServer))
     };
 
     playSoundType = type => {
+        soundsQueue.volume = this.props.volume;
         soundsQueue.play(soundsBank.getRandomWithType(type));
     };
 
     render() {
-        const {gameStatus, iAmShooter} = this.props;
-        const {shootTime} = this.state;
+        const
+            {gameStatus, iAmShooter} = this.props,
+            {shootTime} = this.state;
 
         return (
             <Styled.App>
                 <Styled.GlobalStyle/>
-                <Styled.Grid>
-                    {
-                        gameStatus === gameStatuses.initialServer &&
-                        <RoomCreator/>
-                    }
 
-                    {/*<>*/}
-                    {/*    <Styled.MyBoard>*/}
-                    {/*        {*/}
-                    {/*            mapToGridShiftBy1(*/}
-                    {/*                symbols,*/}
-                    {/*                () => Styled.LetterCell,*/}
-                    {/*            )*/}
-                    {/*        }*/}
-                    {/*    </Styled.MyBoard>*/}
-                    {/*    <Styled.OpponentBoard>*/}
-                    {/*        {*/}
-                    {/*            mapToGridShiftBy2(*/}
-                    {/*                shotsMapAdapter(this.props.shotsMap),*/}
-                    {/*                ({type}) => {*/}
-                    {/*                    switch (type) {*/}
-                    {/*                        case 'hit':*/}
-                    {/*                            return Styled.ShotHitCell;*/}
-                    {/*                        case 'miss':*/}
-                    {/*                            return Styled.ShotMissCell;*/}
+                <SettingsPanel/>
 
-                    {/*                        case 'kill':*/}
-                    {/*                        default:*/}
-                    {/*                            return Styled.ShotHitCell*/}
-                    {/*                    }*/}
-                    {/*                },*/}
-                    {/*            )*/}
-                    {/*        }*/}
-                    {/*        {*/}
-                    {/*            mapToGridShiftBy1(*/}
-                    {/*                symbols,*/}
-                    {/*                () => Styled.LetterCell,*/}
-                    {/*            )*/}
-                    {/*        }*/}
-                    {/*    </Styled.OpponentBoard>*/}
-                    {/*    <Styled.MoveIndicator/>*/}
-                    {/*    <ShootTimer key={this.state.timerKey} deadline={1000000}/>*/}
-                    {/*</>*/}
+                <OpponentDisconnectedModal
+                    onConfirmLeaveRoom={this.leaveRoom}
+                />
 
-                    {
-                        gameStatus === gameStatuses.shipPlacement &&
-                        <>
-                            <Styled.MyBoard>
-                                {
-                                    mapToGridShiftBy2(
-                                        hoversGrid,
-                                        () => Styled.ShipPlacementCell,
-                                        (x, y) => eventsBus.emit(busEvents.placeShip, [x, y])
-                                    )
-                                }
-                                {mapToGridShiftBy1(symbols, () => Styled.LetterCell)}
-                                {mapShipsToGrid(this.props.playerShips)}
-                            </Styled.MyBoard>
-                            <ShipPlacementPanel/>
-                        </>
-                    }
+                {
+                    gameStatus === gameStatuses.initialServer &&
+                    <JoinRoomPage/>
+                }
 
-                    {
-                        gameStatus === gameStatuses.active &&
-                        <>
-                            <button onClick={this.resetGame}>
-                                stop game
-                            </button>
-                            <Styled.MyBoard>
-                                {mapToGridShiftBy1(symbols, () => Styled.LetterCell)}
+                {
+                    gameStatus === gameStatuses.shipPlacement &&
+                    <ShipsPlacementPage/>
+                }
+
+                {
+                    gameStatus !== gameStatuses.initialServer &&
+                    <Styled.Grid>
+                        {
+                            gameStatus === gameStatuses.active &&
+                            <>
+                                <button onClick={this.leaveRoom}>
+                                    stop game
+                                </button>
+                                <Styled.MyBoard>
+                                    {mapToGridShiftBy1(symbols, () => Styled.LetterCell)}
+                                    {
+                                        mapToGridShiftBy2(
+                                            this.props.opponentShotsMap,
+                                            () => Styled.ShotMissCell
+                                        )
+                                    }
+                                    {mapShipsToGrid(this.props.playerShips)}
+                                </Styled.MyBoard>
+                                <Styled.OpponentBoard>
+                                    {
+                                        mapToGridShiftBy1(
+                                            symbols,
+                                            () => Styled.LetterCell,
+                                        )
+                                    }
+                                    {
+                                        mapToGridShiftBy2(
+                                            hoversGrid,
+                                            () => Styled.AimCell,
+                                            this.shoot
+                                        )
+                                    }
+                                    {
+                                        mapToGridShiftBy2(
+                                            shotsMapAdapter(this.props.shotsMap),
+                                            ({type}) => {
+
+                                                switch (type) {
+                                                    case 'hit':
+                                                        return Styled.ShotHitCell;
+                                                    case 'miss':
+                                                        return Styled.ShotMissCell;
+                                                    case 'kill':
+                                                        return Styled.ShipDieCell;
+                                                    default:
+                                                        return props => <p>Ы</p>
+                                                }
+                                            },
+                                        )
+                                    }
+                                </Styled.OpponentBoard>
+                                <Styled.MoveIndicator shooter={iAmShooter}/>
                                 {
-                                    mapToGridShiftBy2(
-                                        this.props.opponentShotsMap,
-                                        () => Styled.ShotMissCell
-                                    )
+                                    shootTime &&
+                                    <ShootTimer key={this.state.timerKey} deadline={shootTime}/>
                                 }
-                                {mapShipsToGrid(this.props.playerShips)}
-                            </Styled.MyBoard>
-                            <Styled.OpponentBoard>
-                                {
-                                    mapToGridShiftBy1(
-                                        symbols,
-                                        () => Styled.LetterCell,
-                                    )
-                                }
-                                {
-                                    mapToGridShiftBy2(
-                                        hoversGrid,
-                                        () => Styled.AimCell,
-                                        this.shoot
-                                    )
-                                }
-                                {
-                                    mapToGridShiftBy2(
-                                        shotsMapAdapter(this.props.shotsMap),
-                                        ({type}) => {
-                                            switch (type) {
-                                                case 'hit':
-                                                    return Styled.ShotHitCell;
-                                                case 'miss':
-                                                    return Styled.ShotMissCell;
-                                                case 'kill':
-                                                    return Styled.ShipDieCell;
-                                                default:
-                                                    return props => <p>Ы</p>
-                                            }
-                                        },
-                                    )
-                                }
-                            </Styled.OpponentBoard>
-                            <Styled.MoveIndicator shooter={iAmShooter}/>
-                            {
-                                shootTime &&
-                                <ShootTimer key={this.state.timerKey} deadline={shootTime}/>
-                            }
-                        </>
-                    }
-                </Styled.Grid>
+                            </>
+                        }
+                    </Styled.Grid>
+                }
             </Styled.App>
         );
     }
@@ -372,10 +353,12 @@ App.propTypes = {
     gameStatus: PropTypes.number.isRequired,
     roomID: PropTypes.string,
     playerID: PropTypes.string,
-    side: PropTypes.string,
+
     shotsMap: PropTypes.object.isRequired,
     opponentShotsMap: PropTypes.array.isRequired,
     iAmShooter: PropTypes.bool,
+    volume: PropTypes.number.isRequired,
+    opponentDisconnectedModalOpen: PropTypes.bool.isRequired,
 };
 
 const mapStateToProps = state => ({
@@ -384,10 +367,11 @@ const mapStateToProps = state => ({
     gameStatus: getDeepProp(state, 'status.gameStatus'),
     roomID: getDeepProp(state, 'settings.roomID'),
     playerID: getDeepProp(state, 'settings.playerID'),
-    side: getDeepProp(state, 'settings.side'),
     shotsMap: state.shotsMap,
     opponentShotsMap: state.opponentShotsMap,
     iAmShooter: state.iAmShooter,
+    volume: state.volume,
+    opponentDisconnectedModalOpen: state.opponentDisconnectedModalOpen
 });
 
 export default connect(mapStateToProps)(App);

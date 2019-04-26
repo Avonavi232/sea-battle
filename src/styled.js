@@ -8,6 +8,29 @@ import paper from './img/paper.jpg';
 import config from './config';
 import {SquaredContainer} from "./components/SquareContainer";
 
+const breakpoints = {
+    xl: 1200,
+    lg: 992,
+    md: 768,
+    sm: 576,
+};
+
+const mediaUp = Object.keys(breakpoints).reduce((acc, label) => {
+    acc[label] = `(min-width: ${breakpoints[label]}px)`;
+    return acc;
+}, {});
+
+export const theme = {
+    cellColor: '#d1d6ff',
+    inkColor: '#2EABEC',
+    greenInkColor: '#28a645',
+    redInkColor: '#da3545',
+    cellLineWidth: '1px',
+    boardFontSize: '36px',
+    boardSize: config.boardSize,
+    breakpointUp: {...mediaUp}
+};
+
 
 export const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css?family=Roboto:300,400');
@@ -21,14 +44,6 @@ export const GlobalStyle = createGlobalStyle`
     box-sizing: border-box;
   }
 `;
-
-const theme = {
-    cellColor: '#d1d6ff',
-    inkColor: '#2EABEC',
-    cellLineWidth: '1px',
-    boardFontSize: '36px',
-    boardSize: config.boardSize
-};
 
 export const cellBg = (color = theme.cellColor) => css`
     background: 
@@ -54,9 +69,9 @@ export const App = styled.div`
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  //display: flex;
+  //justify-content: center;
+  //align-items: center;
   position: relative;
   padding: 1rem;
   &:before {
@@ -127,7 +142,7 @@ const boardGrid = css`
   grid-template: repeat(${theme.boardSize + 1}, 1em) / repeat(${theme.boardSize + 1}, 1em);
 `;
 
-const Board = styled(props => {
+export const Board = styled(props => {
     return (
         <SquaredContainer {...props} innerClassName="inner">
             {props.children}
@@ -156,13 +171,6 @@ export const OpponentBoard = styled(Board)`
   grid-area: OpponentBoard;
 `;
 
-// export const OpponentBoard = styled.div`
-//   grid-area: OpponentBoard;
-//   place-self: center;
-//   ${cellBg()}
-//   ${boardGrid}
-// `;
-
 
 /************CELLS***********/
 
@@ -177,6 +185,9 @@ export const Cell = styled(({x, y, w, h, ...props}) => <div {...props}/>).attrs(
 }))`
   width: 100%;
   height: 100%;
+  svg {
+    display: block;
+  }
 `;
 
 

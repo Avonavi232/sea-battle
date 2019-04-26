@@ -103,13 +103,11 @@ export default class GameConnection {
                     return this.connectToRoom({
                         roomID,
                         playerID,
-                        side: gameSides.client
                     })
                 } else {
                     return Promise.resolve({
                         playerID,
                         gameStatus: gameStatuses.initialServer,
-                        side: gameSides.server
                     });
                 }
             })
@@ -117,7 +115,6 @@ export default class GameConnection {
                 console.error(e);
                 return Promise.reject({
                     playerID: playerIDsave,
-                    side: gameSides.server
                 });
             })
     }
