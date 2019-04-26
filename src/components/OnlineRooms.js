@@ -4,18 +4,38 @@ import {connect} from "react-redux";
 import styled from 'styled-components/macro';
 import {getDeepProp} from "../utils/functions";
 import {gameConnection} from "../utils/gameConnection";
-import {gameSides, gameStatuses} from "../utils/constants";
+import {gameStatuses} from "../utils/constants";
 import {resetState, setGameStatus, setRoomSettings} from "../actions";
-
-const Container = styled.div`
-  border: 1px solid red;
-  padding: 1rem;
-  width: 60vw;
-`;
+import {ReactComponent as LockedIcon} from '../img/locked.svg';
+import {ReactComponent as UnlockedIcon} from '../img/unlocked.svg';
 
 const RoomsTable = styled.table`
   width: 100%;
   text-align: center;
+`;
+
+const VerticalAligned = styled.span`
+  display: inline-block;
+  vertical-align: middle;
+`;
+
+const StyledPrivateIcon = styled(({isPrivate, ...props}) => {
+    const Component = isPrivate ? LockedIcon : UnlockedIcon;
+    return <Component {...props}/>
+})`
+  width: 15px;
+  height: 15px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: .5rem;
+ 
+  path {
+    fill: ${({isPrivate}) => isPrivate ? '#da3545' : '#28a645'};
+  }
+`;
+
+const Col = styled(({width, ...props}) => <th {...props}/>)`
+  width: ${({width}) => width};
 `;
 
 class OnlineRooms extends Component {
@@ -30,16 +50,11 @@ class OnlineRooms extends Component {
     };
 
     roomEnteredHandler = ({roomID, settings}) => {
-        const {dispatch, side} = this.props;
+        const {dispatch} = this.props;
         let status;
 
         settings.roomUrl = `${window.location.origin}/?roomID=${roomID}`;
         settings.roomID = roomID;
-
-        if (side === gameSides.server) {
-            status = gameStatuses.waitingServer;
-            window.history.pushState(null, 'RoomName', settings.roomUrl);
-        }
 
         dispatch(setRoomSettings(settings));
         status && dispatch(setGameStatus(status));
@@ -52,17 +67,13 @@ class OnlineRooms extends Component {
 
                 this.props.dispatch(resetState());
 
-                this.props.dispatch(setRoomSettings({
-                    side: gameSides.server
-                }));
-
                 this.props.dispatch(setGameStatus(gameStatuses.initialServer))
             });
     };
 
     leaveRoomButton = () => {
         return (
-            <button onClick={() => this.leaveRoomHandler()} >
+            <button type="button" className="btn btn-primary" onClick={() => this.leaveRoomHandler()} >
                 Вы здесь. Выйти
             </button>
         )
@@ -70,22 +81,23 @@ class OnlineRooms extends Component {
 
     knockToRoomButton = (roomID, playerID, isProtected) => {
         const connectionData = { roomID, playerID };
-
         return (
-            <button onClick={() => this.knockToRoomHandler(connectionData, isProtected)} >
+            <button type="button" className="btn btn-primary" onClick={() => this.knockToRoomHandler(connectionData, isProtected)} >
                 Войти
             </button>
         )
     };
 
-    getRoomsLayout = roomsData => {
-        const {dispatch, roomID, playerID} = this.props;
+    getRoomsRowsLayout = roomsData => {
+        const {roomID, playerID} = this.props;
 
         return Object.values(roomsData).map(roomData => {
             return (
                 <tr key={roomData.roomID}>
-                    <td>{roomData.name}</td>
-                    <td>{!!roomData.protected ? '+' : '-'}</td>
+                    <td>
+                        <StyledPrivateIcon isPrivate={!!roomData.protected}/>
+                        <VerticalAligned>{roomData.name}</VerticalAligned>
+                    </td>
                     <td>{roomData.online}/{roomData.size}</td>
                     <td>
                         {
@@ -105,24 +117,20 @@ class OnlineRooms extends Component {
         const {onlineRooms} = this.props;
 
         return (
-            <Container>
-                <h2>Online Rooms</h2>
-                <RoomsTable>
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Protected</th>
-                        <th>Online</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {
-                        this.getRoomsLayout(onlineRooms)
-                    }
-                    </tbody>
-                </RoomsTable>
-            </Container>
+            <RoomsTable className={this.props.className + ' table'}>
+                <thead>
+                <tr>
+                    <Col width="25%" scope="col">Room</Col>
+                    <Col width="25%" scope="col">Online</Col>
+                    <Col width="50%" scope="col">Actions</Col>
+                </tr>
+                </thead>
+                <tbody>
+                {
+                    this.getRoomsRowsLayout(onlineRooms)
+                }
+                </tbody>
+            </RoomsTable>
         );
     }
 }

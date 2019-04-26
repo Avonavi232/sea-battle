@@ -76,7 +76,7 @@ class RoomCreator extends Component {
                     </div>
                 }
 
-                <button type="submit" className="btn btn-primary">Submit</button>
+                <button type="submit" className="btn btn-primary">Create</button>
             </form>
         );
     }
@@ -84,12 +84,10 @@ class RoomCreator extends Component {
 
 RoomCreator.propTypes = {
     playerID: PropTypes.string.isRequired,
-    side: PropTypes.string,
 };
 
 const mapStateToProps = state => ({
     playerID: getDeepProp(state, 'settings.playerID'),
-    side: getDeepProp(state, 'settings.side'),
 });
 
 export default connect(mapStateToProps)(RoomCreator);
