@@ -63,7 +63,6 @@ class Room {
                 unsubscribeSocketFromEvents(this.roomEventsNames, player.socket);
                 this.leaveSocketFromRoom(player.socket);
             }
-            console.log(player.playerID, ' is kicked');
         }
     }
 
@@ -167,9 +166,11 @@ class Room {
         player.storePlayerShot(...coords, shotResult);
         opponent.storeOpponentShot(...coords, shotResult);
 
+        const opponentStats = opponent.shipsMap.stats;
+
         this.rotateShooters(!isShotMissed && this.currentShooter);
 
-        return shotResult;
+        return {shotResult, opponentStats};
     }
 
     get length() {
@@ -189,8 +190,6 @@ class Room {
         this.cancelScheduledRoomDestroy();
 
         this.roomsContainer.emitRoomsUpdated(this, true);
-
-        console.log('Room is deleted. Current active rooms: ', this.roomsContainer.rooms.size);
     }
 
     scheduleRoomDestroy() {
@@ -198,7 +197,6 @@ class Room {
     }
 
     cancelScheduledRoomDestroy() {
-        console.log('room scheluded destroy canceled');
         clearTimeout(this.destroyRoomTimerId);
         this.destroyRoomTimerId = null;
     }
@@ -222,11 +220,20 @@ class Room {
         const room = this;
         return (coords, ack) => {
             try {
-                const shotResult = room.playerShoots(player, coords);
+                const {shotResult, opponentStats} = room.playerShoots(player, coords);
 
                 ack(shotResult); //Ответ стреляющему
 
                 player.sendToRoomExceptMe('opponentShoot', coords); //Ответ тому, в кого стреляют
+
+                if (!opponentStats.aliveShipsCount) {
+                    Array.from(this.players).forEach(player => {
+                       const stats = player.shipsMap.stats;
+                       player.sendToMe('gameOver', {stats});
+                    });
+                }
+
+
             } catch (e) {
                 ack({error: e.message}); //Ответ стреляющему
             }

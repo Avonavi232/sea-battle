@@ -79,5 +79,10 @@ export const updateOnlineRooms = roomsData => ({
     payload: {roomsData}
 });
 
+export const setGameResult = stats => ({
+    type: C.SET_GAME_RESULT,
+    payload: {stats}
+});
+
 
 

@@ -12,6 +12,7 @@ const initialState = {
     opponentDisconnectedModalOpen: false,
     roomDestroyDeadline: null,
     onlineRooms: {},
+    gameResult: null,
     settings: {
         chatEnable: undefined,
         maxScore: undefined,
@@ -135,6 +136,11 @@ const updateOnlineRooms = (state, {roomsData}) => {
     };
 };
 
+const setGameResult = (state, {stats}) => ({
+    ...state,
+    gameResult: stats
+});
+
 const handlers = {
     [C.SET_NOT_DISTRIBUTED_SHIPS]: setNotDistributedShips,
     [C.ADD_PLAYER_SHIP]: addPlayerShip,
@@ -150,6 +156,7 @@ const handlers = {
     [C.TOGGLE_OPPONENT_DISCONNECTED_MODAL]: toggleOpponentDisconnectedModal,
     [C.SET_ROOM_DESTROY_DEADLINE]: setRoomDestroyDeadline,
     [C.UPDATE_ONLINE_ROOMS]: updateOnlineRooms,
+    [C.SET_GAME_RESULT]: setGameResult,
 };
 
 const reducer = createReducer(initialState, handlers);

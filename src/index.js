@@ -8,7 +8,6 @@ import store from './store';
 import 'input-range-scss';
 import './scss/bootstrap.scss';
 import {theme} from "./styled";
-import config from "./config";
 
 ReactDOM.render(
     <Provider store={store}>

@@ -11,21 +11,21 @@ import {
     getDeepProp,
     mapToGridShiftBy1,
     mapToGridShiftBy2,
-    shotsMapAdapter, debounce
+    shotsMapAdapter
 } from "./utils/functions";
-import {gameStatuses, onEvents, busEvents, gameSides} from "./utils/constants";
+import {gameStatuses, onEvents, busEvents} from "./utils/constants";
 import {gameConnection} from "./utils/gameConnection";
 import {soundsQueue} from './utils/soundsQueue';
 import soundsBank from './sounds/soundsBank';
 
 //Components
 import * as Styled from './styled';
-import ShipPlacementPanel from './components/ShipsPlacementPanel';
 import ShootTimer from './components/Timer';
 import SettingsPanel from './components/SettingsPanel/SettingsPanel';
 import OpponentDisconnectedModal from './components/OpponentDisconnectedModal';
 import JoinRoomPage from './components/JoinRoomPage';
 import ShipsPlacementPage from './components/ShipsPlacementPage';
+import Modal from 'react-modal';
 
 
 //Actions
@@ -40,9 +40,25 @@ import {
     toggleOpponentDisconnectedModal,
     setRoomDestroyDeadline,
     updateOnlineRooms,
+    setGameResult,
 } from "./actions";
 import {BasicShip} from "./utils/ships";
 
+const customStyles = {
+    overlay: {
+        backgroundColor: 'rgba(0, 0, 0, .6)'
+    },
+    content : {
+        top                   : '50%',
+        left                  : '50%',
+        right                 : 'auto',
+        bottom                : 'auto',
+        marginRight           : '-50%',
+        transform             : 'translate(-50%, -50%)'
+    }
+};
+
+Modal.setAppElement('#root');
 
 class App extends Component {
     constructor(props) {
@@ -50,7 +66,8 @@ class App extends Component {
 
         this.state = {
             shootTime: null,
-            timerKey: Math.random()
+            timerKey: Math.random(),
+            modalIsOpen: false
         }
     }
 
@@ -174,6 +191,13 @@ class App extends Component {
             {
                 eventName: 'roomUpdated',
                 eventHandler: roomsData => this.props.dispatch(updateOnlineRooms(roomsData))
+            },
+            {
+                eventName: 'gameOver',
+                eventHandler: ({stats}) => {
+                    this.toggleModal(true);
+                    this.props.dispatch(setGameResult(stats));
+                }
             }
         ]
     };
@@ -242,6 +266,8 @@ class App extends Component {
     resetGameState = (options = {}) => {
         window.history.pushState(null, 'Home', window.origin);
 
+        this.setState({modalIsOpen: false});
+
         this.props.dispatch(resetState());
 
         this.props.dispatch(setRoomSettings({
@@ -256,9 +282,20 @@ class App extends Component {
         soundsQueue.play(soundsBank.getRandomWithType(type));
     };
 
+    toggleModal = open => {
+        this.setState({
+            modalIsOpen: open !== undefined ? open : !this.state.modalIsOpen
+        });
+    };
+
+    endGameHandler = () => {
+        this.toggleModal(false);
+        this.leaveRoom();
+    };
+
     render() {
         const
-            {gameStatus, iAmShooter} = this.props,
+            {gameStatus, iAmShooter, gameResult} = this.props,
             {shootTime} = this.state;
 
         return (
@@ -287,6 +324,23 @@ class App extends Component {
                         {
                             gameStatus === gameStatuses.active &&
                             <>
+                                {
+                                    gameResult &&
+                                    <Modal
+                                        isOpen={this.state.modalIsOpen}
+                                        onRequestClose={() => this.endGameHandler()}
+                                        style={customStyles}
+                                    >
+                                        <h2>
+                                            {
+                                                gameResult.aliveShipsCount ?
+                                                    'Поздравляем, вы выиграли!' :
+                                                    'Сорян, вы проиграли'
+                                            }
+                                        </h2>
+                                        <pre>{JSON.stringify(gameResult)}</pre>
+                                    </Modal>
+                                }
                                 <button onClick={this.leaveRoom}>
                                     stop game
                                 </button>
@@ -359,6 +413,7 @@ App.propTypes = {
     iAmShooter: PropTypes.bool,
     volume: PropTypes.number.isRequired,
     opponentDisconnectedModalOpen: PropTypes.bool.isRequired,
+    gameResult: PropTypes.object,
 };
 
 const mapStateToProps = state => ({
@@ -371,7 +426,8 @@ const mapStateToProps = state => ({
     opponentShotsMap: state.opponentShotsMap,
     iAmShooter: state.iAmShooter,
     volume: state.volume,
-    opponentDisconnectedModalOpen: state.opponentDisconnectedModalOpen
+    opponentDisconnectedModalOpen: state.opponentDisconnectedModalOpen,
+    gameResult: state.gameResult
 });
 
 export default connect(mapStateToProps)(App);

@@ -123,8 +123,6 @@ const knockToRoomHandlerCreator = player => ({roomID, password, reconnectingPlay
 
         roomsContainer.emitRoomsUpdated(room);
 
-        console.log('reconnect', room.arePlayersReady());
-
         if (room.arePlayersReady()){
             room.startGame(oldPlayer);
         }

@@ -86,10 +86,6 @@ const SwitchContainer = styled.div`
 `;
 
 class ShipPlacementPanel extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     componentDidMount() {
         const {dispatch} = this.props;
 

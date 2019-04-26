@@ -2,7 +2,7 @@ import axios from "axios";
 import io from "socket.io-client";
 
 import config from '../config';
-import {emitEvents, gameSides, gameStatuses} from "./constants";
+import {emitEvents, gameStatuses} from "./constants";
 import {getDeepProp} from "./functions";
 import {parse} from "query-string";
 
