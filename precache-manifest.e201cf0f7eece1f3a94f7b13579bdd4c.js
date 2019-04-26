@@ -4,7 +4,7 @@ self.__precacheManifest = [
     "url": "/sea-battle/static/media/aim.93232405.svg"
   },
   {
-    "revision": "e549b5eb1cf5a8c9af92",
+    "revision": "ab06b08927d44fe0dec7",
     "url": "/sea-battle/static/css/main.64d3585f.chunk.css"
   },
   {
@@ -36,8 +36,8 @@ self.__precacheManifest = [
     "url": "/sea-battle/static/media/shipHit.175ec828.wav"
   },
   {
-    "revision": "e549b5eb1cf5a8c9af92",
-    "url": "/sea-battle/static/js/main.25529758.chunk.js"
+    "revision": "ab06b08927d44fe0dec7",
+    "url": "/sea-battle/static/js/main.17b11f4e.chunk.js"
   },
   {
     "revision": "8cf451d2163f8aa2ab406bd68a9adad8",
@@ -68,7 +68,7 @@ self.__precacheManifest = [
     "url": "/sea-battle/static/css/2.6e799397.chunk.css"
   },
   {
-    "revision": "55f5f8e3128fccf1c8c40d5f0d3054ff",
+    "revision": "d7d5b089aeddf228320298c79a13668d",
     "url": "/sea-battle/index.html"
   }
 ];

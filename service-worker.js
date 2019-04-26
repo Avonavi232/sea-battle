@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/sea-battle/precache-manifest.5fba764ccadb69e5f17bd57ba115e3a0.js"
+  "/sea-battle/precache-manifest.e201cf0f7eece1f3a94f7b13579bdd4c.js"
 );
 
 workbox.clientsClaim();
