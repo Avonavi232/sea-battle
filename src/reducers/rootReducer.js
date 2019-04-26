@@ -11,22 +11,7 @@ const initialState = {
     volume: 0.5,
     opponentDisconnectedModalOpen: false,
     roomDestroyDeadline: null,
-    onlineRooms: {
-        'aasdf': {
-            roomID: 'aasdf',
-            name: 'Azaza room',
-            protected: false,
-            online: 2,
-            size: 2
-        },
-        'fghjfgh': {
-            roomID: 'fghjfgh',
-            name: 'Ololo room',
-            protected: true,
-            online: 1,
-            size: 2,
-        }
-    },
+    onlineRooms: {},
     settings: {
         chatEnable: undefined,
         maxScore: undefined,

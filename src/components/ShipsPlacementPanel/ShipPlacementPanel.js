@@ -88,22 +88,15 @@ const SwitchContainer = styled.div`
 class ShipPlacementPanel extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            form: {
-                x: 0,
-                y: 0,
-                direction: '0'
-            }
-        }
     }
 
     componentDidMount() {
         const {dispatch} = this.props;
 
         const shipsToPlace = {
-            single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
-            double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
-            triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
+            // single: [1, 1, 1, 1].map(() => new ships.SingleShip(null, dispatch)),
+            // double: [1, 1, 1].map(() => new ships.DoubleShip(null, dispatch)),
+            // triple: [1, 1].map(() => new ships.TripleShip(null, dispatch)),
             quadruple: [1].map(() => new ships.QuadrupleShip(null, dispatch)),
         };
 
@@ -111,7 +104,7 @@ class ShipPlacementPanel extends Component {
 
         this.unsubscribe = eventsBus.subscribe(
             busEvents.placeShip,
-            (x, y) => this.placeShip(x, y, Number(this.state.form.direction))
+            (x, y) => this.placeShip(x, y, Number(this.props.currentDirection))
         );
 
         const nextNotPlaced = this.getNextNotPlaced(shipsToPlace);
@@ -142,15 +135,6 @@ class ShipPlacementPanel extends Component {
         }
 
         return null;
-    };
-
-    onChangeHandler = ({target}) => {
-        this.setState({
-            form: {
-                ...this.state.form,
-                [target.name]: target.value
-            }
-        })
     };
 
     placeShip = (x, y, direction) => {
@@ -240,28 +224,24 @@ class ShipPlacementPanel extends Component {
 
                 {
                     current ?
-                        <>
-
-
-                            <Panel>
-                                <CurrentShip
-                                    size={current.length}
-                                    vertical={this.state.form.direction === '1'}
+                        <Panel>
+                            <CurrentShip
+                                size={current.length}
+                                vertical={this.props.currentDirection === '1'}
+                            />
+                            <SwitchContainer>
+                                <span>horizontal</span>
+                                <StyledSwitch
+                                    onChange={value => this.props.onChangeHandler({
+                                        target: {
+                                            name: 'direction',
+                                            value: value ? '1' : '0'
+                                        }
+                                    })}
                                 />
-                                <SwitchContainer>
-                                    <span>horizontal</span>
-                                    <StyledSwitch
-                                        onChange={value => this.onChangeHandler({
-                                            target: {
-                                                name: 'direction',
-                                                value: value ? '1' : '0'
-                                            }
-                                        })}
-                                    />
-                                    <span>vertical</span>
-                                </SwitchContainer>
-                            </Panel>
-                        </>
+                                <span>vertical</span>
+                            </SwitchContainer>
+                        </Panel>
                         :
                         null
                 }
@@ -275,6 +255,8 @@ ShipPlacementPanel.propTypes = {
     notPlacedShips: PropTypes.object.isRequired,
     current: PropTypes.object,
     playerShips: PropTypes.array,
+    onChangeHandler: PropTypes.func.isRequired,
+    currentDirection: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = state => ({

@@ -2,6 +2,7 @@ import React from "react";
 
 import * as Styled from "../styled";
 import {BasicShip} from "./ships";
+import config from '../config';
 
 export function getDeepProp(object, path) {
     const p = path.split('.');
@@ -123,4 +124,48 @@ export const debounce = (fn, delay) => {
         }, delay);
     };
 };
+
+
+const shipPlacementValidatorCreator = () => {
+    const
+        rules = [],
+        boardSize = config.boardSize;
+
+    const addRule = ruleCallback => {
+        rules.push(ruleCallback)
+    };
+
+    const validate = (coords, shipToPlace, field) => {
+        for (const rule of rules) {
+            if (!rule({coords, boardSize, field, shipToPlace})) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    return {addRule, validate};
+};
+
+export const shipPlacementValidator = shipPlacementValidatorCreator();
+
+shipPlacementValidator.addRule(({coords, field}) => {
+    return !field[`${coords.x};${coords.y}`]
+        && !field[`${coords.x + 1};${coords.y + 1}`]
+        && !field[`${coords.x + 1};${coords.y - 1}`]
+        && !field[`${coords.x - 1};${coords.y + 1}`]
+        && !field[`${coords.x - 1};${coords.y - 1}`]
+        && !field[`${coords.x - 1};${coords.y}`]
+        && !field[`${coords.x + 1};${coords.y}`]
+        && !field[`${coords.x};${coords.y - 1}`]
+        && !field[`${coords.x};${coords.y + 1}`];
+});
+
+shipPlacementValidator.addRule(({boardSize, shipToPlace, coords}) => {
+    if (shipToPlace.checkDirection()) {
+        return boardSize >= shipToPlace.length + coords.x
+    } else {
+        return boardSize >= shipToPlace.length + coords.y
+    }
+});
 
