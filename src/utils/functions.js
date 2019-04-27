@@ -126,46 +126,62 @@ export const debounce = (fn, delay) => {
 };
 
 
-const shipPlacementValidatorCreator = () => {
-    const
-        rules = [],
-        boardSize = config.boardSize;
+export const shipPlacementValidatorCreator = () => {
+    let
+        _rules = [],
+        _boardSize = null;
 
     const addRule = ruleCallback => {
-        rules.push(ruleCallback)
+        _rules.push(ruleCallback)
     };
 
     const validate = (coords, shipToPlace, field) => {
-        for (const rule of rules) {
-            if (!rule({coords, boardSize, field, shipToPlace})) {
+        for (const rule of _rules) {
+            if (!rule({coords, boardSize: _boardSize, field, shipToPlace})) {
                 return false;
             }
         }
         return true;
     };
 
-    return {addRule, validate};
+    const setBoardSize = boardSize => _boardSize = boardSize;
+
+    return {setBoardSize, addRule, validate};
 };
 
+export const
+    rule1 = ({coords, field, shipToPlace}) => {
+        const
+            dir = shipToPlace.checkDirection(),
+            shipCoordsIter = i => ({x: coords.x + (dir ? i : 0), y: coords.y + (dir ? 0 : i)}),
+            validateUponRule = ({x, y}) => {
+                return !field[`${x};${y}`]
+                    && !field[`${x + 1};${y + 1}`]
+                    && !field[`${x + 1};${y - 1}`]
+                    && !field[`${x - 1};${y + 1}`]
+                    && !field[`${x - 1};${y - 1}`]
+                    && !field[`${x - 1};${y}`]
+                    && !field[`${x + 1};${y}`]
+                    && !field[`${x};${y - 1}`]
+                    && !field[`${x};${y + 1}`];
+            };
+
+        for (let i = 0; i < shipToPlace.length; i++) {
+            if (!validateUponRule(shipCoordsIter(i))) {
+                return false;
+            }
+        }
+        return true;
+    },
+    rule2 = ({boardSize, shipToPlace, coords}) => {
+        if (shipToPlace.checkDirection()) {
+            return boardSize >= shipToPlace.length + coords.x
+        } else {
+            return boardSize >= shipToPlace.length + coords.y
+        }
+    };
+
 export const shipPlacementValidator = shipPlacementValidatorCreator();
-
-shipPlacementValidator.addRule(({coords, field}) => {
-    return !field[`${coords.x};${coords.y}`]
-        && !field[`${coords.x + 1};${coords.y + 1}`]
-        && !field[`${coords.x + 1};${coords.y - 1}`]
-        && !field[`${coords.x - 1};${coords.y + 1}`]
-        && !field[`${coords.x - 1};${coords.y - 1}`]
-        && !field[`${coords.x - 1};${coords.y}`]
-        && !field[`${coords.x + 1};${coords.y}`]
-        && !field[`${coords.x};${coords.y - 1}`]
-        && !field[`${coords.x};${coords.y + 1}`];
-});
-
-shipPlacementValidator.addRule(({boardSize, shipToPlace, coords}) => {
-    if (shipToPlace.checkDirection()) {
-        return boardSize >= shipToPlace.length + coords.x
-    } else {
-        return boardSize >= shipToPlace.length + coords.y
-    }
-});
-
+shipPlacementValidator.addRule(rule1);
+shipPlacementValidator.addRule(rule2);
+shipPlacementValidator.setBoardSize(config.boardSize);
