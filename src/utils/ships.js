@@ -25,6 +25,8 @@ export class BasicShip{
     set pos({x, y, direction}){
         if (isNumeric(x) && isNumeric(y) && direction !== undefined) {
             const start = {x, y};
+            this.start = start;
+
             for (let i = 0; i < this.length; i++) {
                 const
                     x = direction ? start.x : start.x + i,
@@ -70,6 +72,9 @@ export class BasicShip{
     static recreate = (shipData, dispatch) => {
         const ship = new BasicShip(null, dispatch);
         ship.id = shipData.id;
+        ship.type = shipData.type;
+        ship.start = shipData.start;
+        ship.length = Object.keys(shipData.parts).length;
 
         for(let key in shipData.parts){
             ship.parts[key] = {};
@@ -77,8 +82,6 @@ export class BasicShip{
             ship.parts[key].y = shipData.parts[key].y;
             ship.parts[key].type = BasicShip.types[shipData.parts[key].type];
         }
-
-        ship.length = Object.keys(shipData.parts).length;
 
         return ship;
     }
@@ -88,7 +91,7 @@ export class SingleShip extends BasicShip{
     constructor(...args) {
         super(...args);
         this.length = 1;
-        this.type = "ship1"
+        this.type = "ship1";
     }
 }
 
@@ -96,7 +99,7 @@ export class DoubleShip extends BasicShip{
     constructor(...args) {
         super(...args);
         this.length = 2;
-        this.type = "ship2"
+        this.type = "ship2";
     }
 }
 
@@ -104,7 +107,7 @@ export class TripleShip extends BasicShip{
     constructor(...args) {
         super(...args);
         this.length = 3;
-        this.type = "ship3"
+        this.type = "ship3";
     }
 }
 
@@ -112,6 +115,6 @@ export class QuadrupleShip extends BasicShip{
     constructor(...args) {
         super(...args);
         this.length = 4;
-        this.type = "ship4"
+        this.type = "ship4";
     }
 }
