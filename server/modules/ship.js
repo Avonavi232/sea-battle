@@ -2,6 +2,8 @@ class Ship {
     constructor(params) {
         this.id = params.id;
         this.parts = {};
+        this.type = params.type;
+        this.start = params.start;
 
         for(let [key, val] of Object.entries(params.parts)) {
             this.parts[key] = {
