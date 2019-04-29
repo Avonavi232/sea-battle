@@ -7,6 +7,7 @@ import {ReactComponent as MissIcon} from './img/circle-sketch.svg';
 import paper from './img/paper.jpg';
 import config from './config';
 import {SquaredContainer} from "./components/SquareContainer";
+import SvgBoard from './components/Board/Board';
 
 const breakpoints = {
     xl: 1200,
@@ -142,10 +143,10 @@ const boardGrid = css`
   grid-template: repeat(${theme.boardSize + 1}, 1em) / repeat(${theme.boardSize + 1}, 1em);
 `;
 
-export const Board = styled(props => {
+export const Board = styled(({className, ...props}) => {
     return (
-        <SquaredContainer {...props} innerClassName="inner">
-            {props.children}
+        <SquaredContainer className={className} innerClassName="inner">
+            <SvgBoard {...props}/>
         </SquaredContainer>
     )
 })`
@@ -153,13 +154,15 @@ export const Board = styled(props => {
   width: 100%;
   height: 100%;
   position: relative;
-  & > .inner {
+  & .inner {
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    ${cellBg()};
-    ${boardGrid}
+    svg {
+        width: 100%;
+        height: 100%;
+    }
   }
 `;
 
@@ -252,7 +255,7 @@ export const AimCell = styled(props => {
 export const ShipCell = styled(props => {
     return (
         <Cell {...props}>
-            <HitIcon className="hit-cell__svg"/>
+            <HitIcon {...props} className="hit-cell__svg"/>
         </Cell>
     )
 })`
@@ -265,13 +268,22 @@ export const ShipCell = styled(props => {
   }
 `;
 
-export const ShipPlacementCell = styled(ShipCell)`
-  ${cellHoverBase};
-  opacity: .15;
-  transition: all .2s;
-  &:hover {
-    opacity: .6;
-  }
+export const ShipPlacementCell = styled(({transform, ...props}) => {
+    return (
+        <HitIcon {...props}/>
+    )
+})`
+    ${cellHoverBase};
+    opacity: .15;
+    transition: all .2s;
+    
+    path {
+      fill: ${theme.inkColor}
+    }
+    
+    &:hover {
+      opacity: .6;
+    }
 `;
 
 

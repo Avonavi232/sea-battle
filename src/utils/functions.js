@@ -9,6 +9,10 @@ export function getDeepProp(object, path) {
     return p.reduce((xs, x) => (xs && xs[x] !== undefined ? xs[x] : undefined), object);
 }
 
+export function isFn(arg) {
+    return typeof arg === 'function';
+}
+
 export function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
@@ -57,8 +61,7 @@ export const eventsBus = new EventEmitter();
  * @param converter
  * @returns {function(*, *, *=): *}
  */
-const getMapToGrid = converter => (items, getComponent, onClick) => {
-    onClick = onClick || Function.prototype;
+export const getMapToGrid = converter => (items, getComponent, onClick = Function.prototype) => {
     return items.map((item, index) => {
         const
             {x: gridX, y: gridY} = typeof converter === 'function' ? converter(item.x, item.y) : item,

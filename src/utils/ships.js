@@ -8,6 +8,8 @@ export class BasicShip{
         this.parts = {};
         this.dispatch = dispatch || Function.prototype;
         this.length = 1;
+        this.type = 'ship1';
+        this.start = {};
 
         if (params) {
             this.pos = params;
@@ -30,6 +32,8 @@ export class BasicShip{
                     id = `${this.id}_${i+1}`;
 
                 this.parts[`${x};${y}`] = { x, y, id, type: BasicShip.types.ship };
+                this.direction = direction;
+                this.start = start;
             }
         }
     }
@@ -84,6 +88,7 @@ export class SingleShip extends BasicShip{
     constructor(...args) {
         super(...args);
         this.length = 1;
+        this.type = "ship1"
     }
 }
 
@@ -91,6 +96,7 @@ export class DoubleShip extends BasicShip{
     constructor(...args) {
         super(...args);
         this.length = 2;
+        this.type = "ship2"
     }
 }
 
@@ -98,6 +104,7 @@ export class TripleShip extends BasicShip{
     constructor(...args) {
         super(...args);
         this.length = 3;
+        this.type = "ship3"
     }
 }
 
@@ -105,5 +112,6 @@ export class QuadrupleShip extends BasicShip{
     constructor(...args) {
         super(...args);
         this.length = 4;
+        this.type = "ship4"
     }
 }

@@ -4,10 +4,11 @@ import {connect} from "react-redux";
 import styled from 'styled-components/macro';
 
 import * as Styled from "../../styled";
-import {eventsBus, mapShipsToGrid, mapToGridShiftBy1, mapToGridShiftBy2, shipPlacementValidator} from "../../utils/functions";
-import {hoversGrid, symbols} from "../../utils/lettersGrid";
+import {eventsBus, mapToGridShiftBy2, shipPlacementValidator} from "../../utils/functions";
+import {coordsGrid, symbols} from "../../utils/lettersGrid";
 import {busEvents} from "../../utils/constants";
 import ShipPlacementPanel from "../ShipsPlacementPanel";
+import {BasicShip} from "../../utils/ships";
 
 const Container = styled.div`
   height: 100%;
@@ -21,6 +22,26 @@ const Container = styled.div`
     grid-template-rows: 40vh;
   }
 `;
+
+
+const mapShipsToGrid = ships => {
+    const getComponent = shipPart => {
+        switch (shipPart.type) {
+            case BasicShip.types.kill:
+                return Styled.ShipDieCell;
+
+            case BasicShip.types.hit:
+                return Styled.ShotHitCell;
+
+            case BasicShip.types.ship:
+            default:
+                return Styled.ShipCell
+        }
+    };
+
+    return ships.map(ship => mapToGridShiftBy2(Object.values(ship.parts), getComponent))
+};
+
 
 class ShipsPlacementPage extends Component {
     constructor(props) {
@@ -66,23 +87,61 @@ class ShipsPlacementPage extends Component {
                 length: current.length
             };
 
-        return hoversGrid.filter(coords => shipPlacementValidator.validate(coords, goingToBePlaced, playerShips))
+        return coordsGrid.filter(coords => shipPlacementValidator.validate(coords, goingToBePlaced, playerShips))
     }
 
     render() {
+        const ships = [
+            {
+                direction: 1,
+                start: {
+                    x: 0,
+                    y: 2,
+                },
+                type: 'ship4',
+                length: 4,
+                id: 'asfdasdf'
+            }
+        ];
+
+        const data = [].concat(
+            {
+                elements: this.getAvailablePlaces(),
+                transformCoords: (x, y) => ({x: x + 1, y: y + 1}),
+                actions: {
+                    onClick: ({x, y}) => eventsBus.emit(busEvents.placeShip, [x, y])
+                }
+            },
+            {
+                elements: symbols
+            },
+            {
+                elements: this.props.playerShips.map(({direction, start: {x, y}, type, length, id}) => ({
+                    direction,
+                    x,
+                    y,
+                    type,
+                    length,
+                    id
+                })),
+
+                transformCoords: (x, y) => ({x: x + 1, y: y + 1}),
+            }
+        );
+
         return (
             <Container>
-                <Styled.Board>
-                    {
-                        mapToGridShiftBy2(
-                            this.getAvailablePlaces(),
-                            () => Styled.ShipPlacementCell,
-                            (x, y) => eventsBus.emit(busEvents.placeShip, [x, y])
-                        )
-                    }
-                    {mapToGridShiftBy1(symbols, () => Styled.LetterCell)}
-                    {mapShipsToGrid(this.props.playerShips)}
-                </Styled.Board>
+
+                <Styled.Board data={data} />
+
+                    {/*{*/}
+                    {/*    mapToGridShiftBy2(*/}
+                    {/*        this.getAvailablePlaces(),*/}
+                    {/*        () => Styled.ShipPlacementCell,*/}
+                    {/*        (x, y) => eventsBus.emit(busEvents.placeShip, [x, y])*/}
+                    {/*    )*/}
+                    {/*}*/}
+                    {/*{mapShipsToGrid(this.props.playerShips)}*/}
                 <ShipPlacementPanel currentDirection={this.state.form.direction} onChangeHandler={this.onChangeHandler}/>
             </Container>
         );

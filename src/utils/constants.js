@@ -41,3 +41,15 @@ export const busEvents = {
   placeShip: 'placeShip',
   opponentShoot: 'opponentShoot',
 };
+
+export const boardElementTypes = {
+    kill: 'kill',
+    hit: 'hit',
+    miss: 'miss',
+    ship1: 'ship1',
+    ship2: 'ship2',
+    ship3: 'ship3',
+    ship4: 'ship4',
+    shipPlacement: 'shipPlacement',
+    char: 'char',
+};

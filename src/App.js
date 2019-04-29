@@ -4,7 +4,7 @@ import {connect} from "react-redux";
 
 
 //Utils
-import {symbols, hoversGrid} from "./utils/lettersGrid";
+import {symbols, coordsGrid} from "./utils/lettersGrid";
 import {
     eventsBus,
     mapShipsToGrid,
@@ -309,12 +309,12 @@ class App extends Component {
                 />
 
                 {
-                    gameStatus === gameStatuses.initialServer &&
+                    gameStatus === 123 &&
                     <JoinRoomPage/>
                 }
 
                 {
-                    gameStatus === gameStatuses.shipPlacement &&
+                    gameStatus === gameStatuses.initialServer &&
                     <ShipsPlacementPage/>
                 }
 
@@ -363,7 +363,7 @@ class App extends Component {
                                     }
                                     {
                                         mapToGridShiftBy2(
-                                            hoversGrid,
+                                            coordsGrid,
                                             () => Styled.AimCell,
                                             this.shoot
                                         )
