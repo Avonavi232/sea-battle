@@ -43,6 +43,7 @@ export const busEvents = {
 };
 
 export const boardElementTypes = {
+    aim: 'aim',
     kill: 'kill',
     hit: 'hit',
     miss: 'miss',

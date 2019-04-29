@@ -4,11 +4,10 @@ import {connect} from "react-redux";
 import styled from 'styled-components/macro';
 
 import * as Styled from "../../styled";
-import {eventsBus, mapToGridShiftBy2, shipPlacementValidator} from "../../utils/functions";
-import {coordsGrid, symbols} from "../../utils/lettersGrid";
+import {eventsBus, mapShipsToGrid, shipPlacementValidator, transformCoordsBy1} from "../../utils/functions";
+import {placementGrid, boardCoordsGrid} from "../../utils/lettersGrid";
 import {busEvents} from "../../utils/constants";
 import ShipPlacementPanel from "../ShipsPlacementPanel";
-import {BasicShip} from "../../utils/ships";
 
 const Container = styled.div`
   height: 100%;
@@ -22,25 +21,6 @@ const Container = styled.div`
     grid-template-rows: 40vh;
   }
 `;
-
-
-const mapShipsToGrid = ships => {
-    const getComponent = shipPart => {
-        switch (shipPart.type) {
-            case BasicShip.types.kill:
-                return Styled.ShipDieCell;
-
-            case BasicShip.types.hit:
-                return Styled.ShotHitCell;
-
-            case BasicShip.types.ship:
-            default:
-                return Styled.ShipCell
-        }
-    };
-
-    return ships.map(ship => mapToGridShiftBy2(Object.values(ship.parts), getComponent))
-};
 
 
 class ShipsPlacementPage extends Component {
@@ -87,24 +67,11 @@ class ShipsPlacementPage extends Component {
                 length: current.length
             };
 
-        return coordsGrid.filter(coords => shipPlacementValidator.validate(coords, goingToBePlaced, playerShips))
-    }
+        return placementGrid.filter(coords => shipPlacementValidator.validate(coords, goingToBePlaced, playerShips))
+    };
 
     render() {
-        const ships = [
-            {
-                direction: 1,
-                start: {
-                    x: 0,
-                    y: 2,
-                },
-                type: 'ship4',
-                length: 4,
-                id: 'asfdasdf'
-            }
-        ];
-
-        const data = [].concat(
+        const data = [
             {
                 elements: this.getAvailablePlaces(),
                 transformCoords: (x, y) => ({x: x + 1, y: y + 1}),
@@ -113,35 +80,17 @@ class ShipsPlacementPage extends Component {
                 }
             },
             {
-                elements: symbols
+                elements: boardCoordsGrid
             },
             {
-                elements: this.props.playerShips.map(({direction, start: {x, y}, type, length, id}) => ({
-                    direction,
-                    x,
-                    y,
-                    type,
-                    length,
-                    id
-                })),
-
-                transformCoords: (x, y) => ({x: x + 1, y: y + 1}),
+                elements: mapShipsToGrid(this.props.playerShips),
+                transformCoords: transformCoordsBy1
             }
-        );
+        ];
 
         return (
             <Container>
-
                 <Styled.Board data={data} />
-
-                    {/*{*/}
-                    {/*    mapToGridShiftBy2(*/}
-                    {/*        this.getAvailablePlaces(),*/}
-                    {/*        () => Styled.ShipPlacementCell,*/}
-                    {/*        (x, y) => eventsBus.emit(busEvents.placeShip, [x, y])*/}
-                    {/*    )*/}
-                    {/*}*/}
-                    {/*{mapShipsToGrid(this.props.playerShips)}*/}
                 <ShipPlacementPanel currentDirection={this.state.form.direction} onChangeHandler={this.onChangeHandler}/>
             </Container>
         );

@@ -4,14 +4,13 @@ import {connect} from "react-redux";
 
 
 //Utils
-import {symbols, coordsGrid} from "./utils/lettersGrid";
+import {boardCoordsGrid, placementGrid, aimsGrid} from "./utils/lettersGrid";
 import {
     eventsBus,
-    mapShipsToGrid,
     getDeepProp,
-    mapToGridShiftBy1,
-    mapToGridShiftBy2,
-    shotsMapAdapter
+    transformCoordsBy1,
+    shotsMapAdapter,
+    mapShipsToGrid
 } from "./utils/functions";
 import {gameStatuses, onEvents, busEvents} from "./utils/constants";
 import {gameConnection} from "./utils/gameConnection";
@@ -208,6 +207,7 @@ class App extends Component {
 
     opponentShootHandler = shot => {
         const result = eventsBus.emit(busEvents.opponentShoot, shot).filter(el => !!el);
+
         if (!result.length) {
             this.props.dispatch(addOpponentShotToMap({x: shot[0], y: shot[1], type: 'miss'}))
         }
@@ -229,7 +229,7 @@ class App extends Component {
         this.props.dispatch(assignShooter(this.props.playerID === shooterID));
     };
 
-    shoot = (x, y) => {
+    shoot = ({x, y}) => {
         return new Promise(resolve => gameConnection.emitShot([x, y], resolve))
             .then(result => {
                 if (!result || result.error) {
@@ -309,90 +309,76 @@ class App extends Component {
                 />
 
                 {
-                    gameStatus === 123 &&
+                    gameStatus === gameStatuses.initialServer &&
                     <JoinRoomPage/>
                 }
 
                 {
-                    gameStatus === gameStatuses.initialServer &&
+                    gameStatus === gameStatuses.shipPlacement &&
                     <ShipsPlacementPage/>
                 }
 
                 {
-                    gameStatus !== gameStatuses.initialServer &&
+                    gameStatus === gameStatuses.active &&
                     <Styled.Grid>
                         {
-                            gameStatus === gameStatuses.active &&
-                            <>
+                            gameResult &&
+                            <Modal
+                                isOpen={this.state.modalIsOpen}
+                                onRequestClose={() => this.endGameHandler()}
+                                style={customStyles}
+                            >
+                                <h2>
+                                    {
+                                        gameResult.aliveShipsCount ?
+                                            'Поздравляем, вы выиграли!' :
+                                            'Сорян, вы проиграли'
+                                    }
+                                </h2>
+                                <pre>{JSON.stringify(gameResult)}</pre>
+                            </Modal>
+                        }
+                        <button onClick={this.leaveRoom}>
+                            stop game
+                        </button>
+                        <Styled.MyBoard
+                            data={[
                                 {
-                                    gameResult &&
-                                    <Modal
-                                        isOpen={this.state.modalIsOpen}
-                                        onRequestClose={() => this.endGameHandler()}
-                                        style={customStyles}
-                                    >
-                                        <h2>
-                                            {
-                                                gameResult.aliveShipsCount ?
-                                                    'Поздравляем, вы выиграли!' :
-                                                    'Сорян, вы проиграли'
-                                            }
-                                        </h2>
-                                        <pre>{JSON.stringify(gameResult)}</pre>
-                                    </Modal>
+                                    elements: boardCoordsGrid
+                                },
+                                {
+                                    elements: mapShipsToGrid(this.props.playerShips),
+                                    transformCoords: transformCoordsBy1
+                                },
+                                {
+                                    elements: this.props.opponentShotsMap,
+                                    transformCoords: transformCoordsBy1
                                 }
-                                <button onClick={this.leaveRoom}>
-                                    stop game
-                                </button>
-                                <Styled.MyBoard>
-                                    {mapToGridShiftBy1(symbols, () => Styled.LetterCell)}
-                                    {
-                                        mapToGridShiftBy2(
-                                            this.props.opponentShotsMap,
-                                            () => Styled.ShotMissCell
-                                        )
-                                    }
-                                    {mapShipsToGrid(this.props.playerShips)}
-                                </Styled.MyBoard>
-                                <Styled.OpponentBoard>
-                                    {
-                                        mapToGridShiftBy1(
-                                            symbols,
-                                            () => Styled.LetterCell,
-                                        )
-                                    }
-                                    {
-                                        mapToGridShiftBy2(
-                                            coordsGrid,
-                                            () => Styled.AimCell,
-                                            this.shoot
-                                        )
-                                    }
-                                    {
-                                        mapToGridShiftBy2(
-                                            shotsMapAdapter(this.props.shotsMap),
-                                            ({type}) => {
+                            ]}
+                        />
+                        <Styled.OpponentBoard
+                            data={[
+                                {
+                                    elements: boardCoordsGrid
+                                },
+                                {
+                                    elements: aimsGrid,
+                                    actions: {
+                                        onClick: this.shoot
+                                    },
+                                    transformCoords: transformCoordsBy1
+                                },
+                                {
+                                    elements: shotsMapAdapter(this.props.shotsMap),
+                                    transformCoords: transformCoordsBy1
+                                }
+                            ]}
+                        />
 
-                                                switch (type) {
-                                                    case 'hit':
-                                                        return Styled.ShotHitCell;
-                                                    case 'miss':
-                                                        return Styled.ShotMissCell;
-                                                    case 'kill':
-                                                        return Styled.ShipDieCell;
-                                                    default:
-                                                        return props => <p>Ы</p>
-                                                }
-                                            },
-                                        )
-                                    }
-                                </Styled.OpponentBoard>
-                                <Styled.MoveIndicator shooter={iAmShooter}/>
-                                {
-                                    shootTime &&
-                                    <ShootTimer key={this.state.timerKey} deadline={shootTime}/>
-                                }
-                            </>
+                        <Styled.MoveIndicator shooter={iAmShooter}/>
+                        {
+                            shootTime &&
+                            <ShootTimer key={this.state.timerKey} deadline={shootTime}/>
                         }
                     </Styled.Grid>
                 }

@@ -4,8 +4,6 @@ import styled from 'styled-components/macro';
 import {boardElementTypes} from "../../utils/constants";
 
 import * as Styled from "./styled";
-
-import {ShipPlacementCell} from "../../styled";
 import {isFn, isNumeric} from "../../utils/functions";
 
 const StyledCanvas = styled(({cellSize, svgRef, ...props}) => <svg viewBox="0 0 100 100" ref={svgRef} {...props}/>)`
@@ -24,17 +22,21 @@ class BoardDrawer {
     constructor(svg) {
         this.surface = Snap(svg);
         this.surfaceBBox = this.surface.getBBox();
-        this.cellSize = (this.surfaceBBox.width / 11).toFixed(2);
+        this.cellSize = Number((this.surfaceBBox.width / 11).toFixed(2));
     }
 
     get _svgComponents() {
         return {
-            [boardElementTypes.shipPlacement]: ShipPlacementCell,
-            [boardElementTypes.char]: Styled.Char,
-            [boardElementTypes.ship1]: Styled.Ship1,
-            [boardElementTypes.ship2]: Styled.Ship2,
-            [boardElementTypes.ship3]: Styled.Ship3,
-            [boardElementTypes.ship4]: Styled.Ship4,
+            [boardElementTypes.kill]: Styled.getShotHitCell,
+            [boardElementTypes.hit]: Styled.getShotHitCell,
+            [boardElementTypes.miss]: Styled.getShotMissCell,
+            [boardElementTypes.aim]: Styled.getAimCell,
+            [boardElementTypes.shipPlacement]: Styled.getShipPlacementCell,
+            [boardElementTypes.char]: Styled.getCharCell,
+            [boardElementTypes.ship1]: Styled.getShip1,
+            [boardElementTypes.ship2]: Styled.getShip2,
+            [boardElementTypes.ship3]: Styled.getShip3,
+            [boardElementTypes.ship4]: Styled.getShip4,
         }
     }
 
@@ -55,8 +57,8 @@ class BoardDrawer {
         if (data.direction) {
             const
                 angle = 90,
-                cx = (cellSize * (transformedX + 0.5)),
-                cy = (cellSize * (transformedY + 0.5));
+                cx = cellSize * 0.5,
+                cy = cellSize * 0.5;
 
             transform += `rotate(${angle} ${cx} ${cy})`;
         }
@@ -68,14 +70,16 @@ class BoardDrawer {
             }
         }
 
-        const Component = this._svgComponents[data.type];
+        const componentGetter = this._svgComponents[data.type];
 
-        return <Component
-            {...actions}
-            {...calculated}
-            transform={transform}
-            content={data.content}
-        />
+        return componentGetter({
+            ...calculated,
+            actions,
+            transform,
+            content: data.content,
+            parts: data.parts,
+            cellSize,
+        })
     };
 
     getDrawnComponent = element => {
@@ -141,31 +145,21 @@ class Board extends Component {
             {boardDrawer} = this.state,
             {data} = this.props;
 
-
         return (
             <StyledCanvas svgRef={this.svgRef} cellSize={boardDrawer && boardDrawer.cellSize}>
                 {this._getGrid()}
-
-                {/*{*/}
-                {/*    boardDrawer && chars &&*/}
-                {/*    chars.map((charData, i) => {*/}
-                {/*        return boardDrawer.drawChar({...charData, key: i});*/}
-                {/*    })*/}
-                {/*}*/}
-
                 {
                     boardDrawer &&
                     data.map(part => {
                         return part.elements.map((el, i) => {
+                            const key = el.id || `${el.x};${el.y}${el.type}`;
                             return React.cloneElement(
                                 boardDrawer.getDrawnComponent({
                                     ...el,
                                     transformCoords: part.transformCoords,
                                     actions: part.actions
                                 }, i),
-                                {
-                                    key: el.id
-                                }
+                                { key }
                             );
                         });
                     })
@@ -188,7 +182,7 @@ Board.propTypes = {
             id: PropTypes.oneOfType([
                 PropTypes.string.isRequired,
                 PropTypes.number.isRequired,
-            ]).isRequired,
+            ]),
             content: PropTypes.oneOfType([
                 PropTypes.string.isRequired,
                 PropTypes.number.isRequired,

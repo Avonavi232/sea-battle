@@ -54,7 +54,6 @@ export class BasicShip{
     }
 
     catchShoot = (x, y) => {
-
         if (this.hasPart(x, y) && this.parts[`${x};${y}`].type === BasicShip.types.ship) {
             this.parts[`${x};${y}`].type = BasicShip.types.hit;
 
@@ -74,6 +73,7 @@ export class BasicShip{
         ship.id = shipData.id;
         ship.type = shipData.type;
         ship.start = shipData.start;
+        ship.direction = shipData.direction;
         ship.length = Object.keys(shipData.parts).length;
 
         for(let key in shipData.parts){

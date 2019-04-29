@@ -96,26 +96,10 @@ export const shotsMapAdapter = obj => {
     return Object.values(obj).reduce((acc, el) => acc.concat(Object.values(el)), []);
 };
 
-export const mapToGridShiftBy1 = getMapToGrid((x, y) => ({x: x + 1, y: y + 1}));
-
-export const mapToGridShiftBy2 = getMapToGrid((x, y) => ({x: x + 2, y: y + 2}));
+export const transformCoordsBy1 = (x, y) => ({x: x + 1, y: y + 1});
 
 export const mapShipsToGrid = ships => {
-    const getComponent = shipPart => {
-        switch (shipPart.type) {
-            case BasicShip.types.kill:
-                return Styled.ShipDieCell;
-
-            case BasicShip.types.hit:
-                return Styled.ShotHitCell;
-
-            case BasicShip.types.ship:
-            default:
-                return Styled.ShipCell
-        }
-    };
-
-    return ships.map(ship => mapToGridShiftBy2(Object.values(ship.parts), getComponent))
+    return ships.map(({start: {x,y}, ...props}) => ({x,y, ...props}));
 };
 
 export const debounce = (fn, delay) => {

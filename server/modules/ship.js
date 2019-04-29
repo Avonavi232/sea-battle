@@ -4,6 +4,7 @@ class Ship {
         this.parts = {};
         this.type = params.type;
         this.start = params.start;
+        this.direction = params.direction;
 
         for(let [key, val] of Object.entries(params.parts)) {
             this.parts[key] = {

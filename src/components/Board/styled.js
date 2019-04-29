@@ -2,9 +2,8 @@ import React from 'react';
 import styled, {css} from "styled-components/macro";
 import {ReactComponent as AimIcon} from "../../img/aim.svg";
 import {ReactComponent as HitIcon} from "../../img/hit.svg";
-import {ReactComponent as MissIcon} from "../../img/circle-sketch.svg";
-import hit from '../../img/cross.png';
-import miss from '../../img/miss.png';
+import hitImg from '../../img/cross.png';
+import missImg from '../../img/miss.png';
 import ship1 from '../../img/ship1.png';
 import ship2 from '../../img/ship2.png';
 import ship3 from '../../img/ship3.png';
@@ -16,166 +15,28 @@ const cellHoverBase = css`
     }
 `;
 
-export const Cell = styled(({x, y, w, h, ...props}) => <div {...props}/>).attrs(({x, y, w, h}) => ({
-    style: {gridArea: `${y} / ${x} / ${y + h} / ${x + w}`}
-}))`
-  width: 100%;
-  height: 100%;
-  svg {
-    display: block;
-  }
-`;
 
-
-export const AimCell = styled(props => {
-    return (
-        <Cell {...props}>
-            <AimIcon className="aim-cell__svg"/>
-        </Cell>
-    )
-})`
+export const ShipPlacementCell = styled(props => <HitIcon {...props}/>)`
   ${cellHoverBase};
-  transition: all .1s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  .aim-cell__svg {
-    opacity: 0;
+    opacity: .15;
     transition: all .2s;
-    width: 80%;
-    height: 80%;
-    display: block;
-    position: relative;
-    left: 1px;
-    top: 1px;
-    path{
-      fill: #35d494;
-    }
-  }
-  
-  &:hover .aim-cell__svg{
-    opacity: 1;
-    animation: heartbeat 1.5s ease-in-out infinite both;
-  }
-  
-  @keyframes heartbeat {
-      from {
-        transform: scale(1);
-        transform-origin: center center;
-        animation-timing-function: ease-out;
-      }
-      10% {
-        transform: scale(0.91);
-        animation-timing-function: ease-in;
-      }
-      17% {
-        transform: scale(0.98);
-        animation-timing-function: ease-out;
-      }
-      33% {
-        transform: scale(0.87);
-        animation-timing-function: ease-in;
-      }
-      45% {
-        transform: scale(1);
-        animation-timing-function: ease-out;
-      }
-    }
-`;
-
-
-export const ShipCell = styled(props => {
-    return (
-        <Cell {...props}>
-            <HitIcon {...props} className="hit-cell__svg"/>
-        </Cell>
-    )
-})`
-  .hit-cell__svg {
-    width: 100%;
-    height: 100%;
+    
     path {
       fill: ${({theme}) => theme.inkColor}
     }
-  }
-`;
-
-export const ShipPlacementCell = styled(({transform, ...props}) => {
-    return (
-        <HitIcon {...props}/>
-    )
-})`
-  ${cellHoverBase};
-  opacity: .15;
-  transition: all .2s;
-  &:hover {
-    opacity: .6;
-  }
-`;
-
-
-export const ShotHitCell = styled(props => {
-    return (
-        <Cell {...props}>
-            <HitIcon className="hit-cell__svg"/>
-        </Cell>
-    )
-})`
-  position: relative;
-  overflow: hidden;
-  &:after,
-  &:before {
-    content: '';
-    position: absolute;
-    top: -25%;
-    bottom: -25%;
-    left: 50%;
-    width: 2px;
-    background-color: #ff6464;
-  }
-  &:before {
-    transform: translateX(-50%) rotate(45deg);
-  }
-  &:after {
-    transform: translateX(-50%) rotate(-45deg);
-  }
-  .hit-cell__svg {
-    width: 100%;
-    height: 100%;
-    path {
-      fill: ${({theme}) => theme.inkColor}
+    
+    &:hover {
+      opacity: .6;
     }
-  }
 `;
 
-export const ShipDieCell = styled(ShotHitCell)`
-  opacity: 0.3;
-`;
-
-export const ShotMissCell = styled(props => {
+const BasicSvgImage = ({content, ...props}) => {
     return (
-        <Cell {...props}>
-            <MissIcon className="miss-cell__svg"/>
-        </Cell>
+        <image {...props} preserveAspectRatio="none"/>
     )
-})`
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  .miss-cell__svg {
-    display: block;
-    width: .4em;
-    height: .4em;
-    path {
-      fill: ${({theme}) => theme.inkColor}
-    }
-  }
-`;
+};
 
-export const Char = styled(({hoverable, transform, content, width, height, x, y, ...props}) => {
+const CharCell = styled(({content, width, height, x, y, ...props}) => {
     return (
         <g {...props} transform={`translate(${x},${y})`}>
             <svg width={width} height={height}>
@@ -185,7 +46,6 @@ export const Char = styled(({hoverable, transform, content, width, height, x, y,
         </g>
     )
 })`
-
     text {
         dominant-baseline: middle;
         text-anchor: middle;
@@ -195,14 +55,71 @@ export const Char = styled(({hoverable, transform, content, width, height, x, y,
     }
 `;
 
-const BasicShip = ({content, ...props}) => {
-    console.log(props);
-    return (
-        <image {...props} preserveAspectRatio="none"/>
+const AimCell = styled(props => <AimIcon {...props}/>)`
+  ${cellHoverBase};
+  opacity: 0;
+    transition: all .2s;
+    width: 80%;
+    height: 80%;
+    display: block;
+    position: relative;
+    left: 1px;
+    top: 1px;
+    
+    path{
+      fill: #35d494;
+    }
+  
+  &:hover{
+    opacity: 1;
+  }
+`;
+
+const Ship = ({x, y, cellSize, parts, width, height, transform, shipImgSrc}) => {
+    return(
+        <g transform={`translate(${x} ${y}) ${transform}`}>
+            <BasicSvgImage width={width} height={height} href={shipImgSrc} />
+            {
+                Object.keys(parts).sort().map((elKey, i) => {
+                    const el = parts[elKey];
+                    if (el.type === 'hit') {
+                        return <BasicSvgImage
+                            key={el.id}
+                            width={cellSize}
+                            height={cellSize}
+                            x={i * cellSize}
+                            href={hitImg}
+                        />
+                    } else {
+                        return null
+                    }
+                })
+            }
+        </g>
     )
 };
 
-export const Ship1 = props => <BasicShip {...props} href={ship1} />;
-export const Ship2 = props => <BasicShip {...props} href={ship2} />;
-export const Ship3 = props => <BasicShip {...props} href={ship3} />;
-export const Ship4 = props => <BasicShip {...props} href={ship4} />;
+const createShipGetter = shipImgSrc => ({x, y, cellSize, parts, width, height, transform}) => {
+
+    return <Ship {...{x, y, cellSize, parts, width, height, transform}} shipImgSrc={shipImgSrc}/>
+};
+
+export const getShip1 = createShipGetter(ship1);
+export const getShip2 = createShipGetter(ship2);
+export const getShip3 = createShipGetter(ship3);
+export const getShip4 = createShipGetter(ship4);
+
+export const getCharCell = ({content, width, height, x, y}) => {
+    return <CharCell {...{content, width, height, x, y}}/>
+};
+
+export const getShipPlacementCell = ({width, height, x, y, actions}) => {
+    return <ShipPlacementCell {...{width, height, x, y}} {...actions}/>
+};
+
+export const getAimCell = ({width, height, x, y, actions}) => {
+    return <AimCell {...{width, height, x, y}} {...actions}/>
+};
+
+export const getShotMissCell = ({width, height, x, y}) => <BasicSvgImage {...{width, height, x, y}} href={missImg} />;
+export const getShotHitCell = ({width, height, x, y}) => <BasicSvgImage {...{width, height, x, y}} href={hitImg} />;
